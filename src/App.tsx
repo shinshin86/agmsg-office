@@ -91,9 +91,7 @@ function App() {
   const [loadError, setLoadError] = useState("");
   const [agmsgError, setAgmsgError] = useState("");
   const [castKey, setCastKey] = useState(0);
-  const [autoplayToken, setAutoplayToken] = useState(0);
   const runIdRef = useRef(0);
-  const consumedAutoplayTokenRef = useRef(0);
 
   const agentMap = useMemo<AgentCharacterMap>(
     () => createAgentCharacterMap(entries),
@@ -165,7 +163,6 @@ function App() {
       const rawRecords = await fetchSampleLog();
       setEntries(normalizeAgmsgRecords(rawRecords));
       setCastKey((value) => value + 1);
-      setAutoplayToken((value) => value + 1);
       setLogSource("sample");
       setSelectedTeam("");
       setImportedFileName("");
@@ -187,7 +184,6 @@ function App() {
         const history = await fetchAgmsgHistory(teamName);
         setEntries(normalizeAgmsgRecords(history.entries));
         setCastKey((value) => value + 1);
-        setAutoplayToken((value) => value + 1);
 
         if (history.source === "sample") {
           setSelectedTeam("");
@@ -224,7 +220,6 @@ function App() {
         resetPlayback();
         setEntries(normalizeAgmsgRecords(rawRecords));
         setCastKey((value) => value + 1);
-        setAutoplayToken((value) => value + 1);
         setSelectedTeam("");
         setLogSource("import");
         setImportedFileName(file.name);
@@ -269,7 +264,6 @@ function App() {
         if (!active) return;
         setEntries(normalizeAgmsgRecords(rawRecords));
         setCastKey((value) => value + 1);
-        setAutoplayToken((value) => value + 1);
         setLogSource("sample");
         setSelectedTeam("");
         setImportedFileName("");
@@ -342,18 +336,6 @@ function App() {
       setHostAnnouncement(undefined);
     }
   }, [entries, speed]);
-
-  useEffect(() => {
-    if (
-      autoplayToken === 0 ||
-      autoplayToken === consumedAutoplayTokenRef.current ||
-      entries.length === 0
-    ) {
-      return;
-    }
-    consumedAutoplayTokenRef.current = autoplayToken;
-    void startReplay();
-  }, [autoplayToken, entries.length, startReplay]);
 
   return (
     <main className="app-shell">
@@ -459,49 +441,21 @@ function App() {
               </p>
             )}
             {agmsgError && <p className="error-text">{agmsgError}</p>}
-            <div className="advanced-panel">
-              <button
-                aria-expanded={showAdvancedSource}
-                className="advanced-toggle"
-                type="button"
-                onClick={() => setShowAdvancedSource((value) => !value)}
-              >
-                <span>Advanced</span>
-                <span>{showAdvancedSource ? "Hide" : "Show"}</span>
-              </button>
-              {showAdvancedSource && (
-                <div className="advanced-content">
-                  <label className="file-input">
-                    Import JSON
-                    <input
-                      accept="application/json,.json"
-                      type="file"
-                      onChange={importJsonLog}
-                    />
-                  </label>
-                  <button
-                    disabled={
-                      logLoading || logSource !== "agmsg" || !selectedTeam
-                    }
-                    type="button"
-                    onClick={() => void loadAgmsgTeam(selectedTeam)}
-                  >
-                    Reload current team
-                  </button>
-                </div>
-              )}
-            </div>
           </section>
 
           <section className="controls-section">
             <h2>Playback</h2>
-            <div className="button-row">
+            <div className="playback-actions">
               <button
-                disabled={playbackStatus === "playing"}
+                className="primary-playback-button"
                 type="button"
-                onClick={() => void startReplay()}
+                onClick={
+                  playbackStatus === "playing"
+                    ? stopReplay
+                    : () => void startReplay()
+                }
               >
-                Play
+                {playbackStatus === "playing" ? "Stop" : "Start"}
               </button>
               <button
                 disabled={playbackStatus !== "playing"}
@@ -509,9 +463,6 @@ function App() {
                 onClick={pauseReplay}
               >
                 Pause
-              </button>
-              <button type="button" onClick={stopReplay}>
-                Stop
               </button>
             </div>
             <label>
@@ -526,6 +477,39 @@ function App() {
               />
               <span>{speed.toFixed(2)}x</span>
             </label>
+          </section>
+
+          <section className="controls-section">
+            <button
+              aria-expanded={showAdvancedSource}
+              className="advanced-toggle"
+              type="button"
+              onClick={() => setShowAdvancedSource((value) => !value)}
+            >
+              <span>Advanced</span>
+              <span>{showAdvancedSource ? "Hide" : "Show"}</span>
+            </button>
+            {showAdvancedSource && (
+              <div className="advanced-content">
+                <label className="file-input">
+                  Import JSON
+                  <input
+                    accept="application/json,.json"
+                    type="file"
+                    onChange={importJsonLog}
+                  />
+                </label>
+                <button
+                  disabled={
+                    logLoading || logSource !== "agmsg" || !selectedTeam
+                  }
+                  type="button"
+                  onClick={() => void loadAgmsgTeam(selectedTeam)}
+                >
+                  Reload current team
+                </button>
+              </div>
+            )}
           </section>
 
           <section className="log-list" aria-label="agmsg entries">
