@@ -38,5 +38,37 @@
     "description": "A friendly stage actor in a casual yellow-and-gray outfit.",
     "portraitPath": "kii/portrait.png",
     "spritesheetPath": "kii/spritesheet.webp"
+  },
+  {
+    "id": "rin",
+    "displayName": "Rin",
+    "role": "Stage actor",
+    "description": "A bright stage actor with apricot and coral tones.",
+    "portraitPath": "rin/portrait.png",
+    "spritesheetPath": "rin/spritesheet.webp"
+  },
+  {
+    "id": "nao",
+    "displayName": "Nao",
+    "role": "Stage actor",
+    "description": "A composed stage actor with seafoam teal and mint tones.",
+    "portraitPath": "nao/portrait.png",
+    "spritesheetPath": "nao/spritesheet.webp"
+  },
+  {
+    "id": "mio",
+    "displayName": "Mio",
+    "role": "Stage actor",
+    "description": "A warm stage actor with rose pink tones.",
+    "portraitPath": "mio/portrait.png",
+    "spritesheetPath": "mio/spritesheet.webp"
+  },
+  {
+    "id": "sora",
+    "displayName": "Sora",
+    "role": "Stage actor",
+    "description": "A steady stage actor with steel-gray and navy tones.",
+    "portraitPath": "sora/portrait.png",
+    "spritesheetPath": "sora/spritesheet.webp"
   }
 ]

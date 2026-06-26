@@ -4,62 +4,80 @@
     "team": "product-studio",
     "from_agent": "lead",
     "to_agent": "planner",
-    "body": "Please outline the first pass for the dashboard polish work.",
+    "body": "Please frame the replay polish work into a short plan.",
     "created_at": "2026-06-24T00:00:00Z",
-    "read_at": "2026-06-24T00:00:04Z"
+    "read_at": "2026-06-24T00:00:06Z"
   },
   {
     "id": 2,
     "team": "product-studio",
     "from_agent": "planner",
-    "to_agent": "dev",
-    "body": "I split the work into layout cleanup, empty states, and a compact review checklist.",
+    "to_agent": "design",
+    "body": "I split it into cast coverage, motion timing, and a quick source-switch check.",
     "created_at": "2026-06-24T00:03:00Z",
-    "read_at": "2026-06-24T00:03:08Z"
+    "read_at": "2026-06-24T00:03:12Z"
   },
   {
     "id": 3,
     "team": "product-studio",
-    "from_agent": "dev",
-    "to_agent": "reviewer",
-    "body": "The main layout is wired up. I kept the data model unchanged and added a small loading state.",
-    "created_at": "2026-06-24T00:08:00Z",
-    "read_at": "2026-06-24T00:08:12Z"
+    "from_agent": "design",
+    "to_agent": "dev",
+    "body": "The stage can stay calm if the new actors enter with a small rise and fade.",
+    "created_at": "2026-06-24T00:06:00Z",
+    "read_at": null
   },
   {
     "id": 4,
     "team": "product-studio",
-    "from_agent": "reviewer",
-    "to_agent": "qa",
-    "body": "Please verify the keyboard path through the filter controls and the detail panel.",
-    "created_at": "2026-06-24T00:12:00Z",
-    "read_at": null
+    "from_agent": "dev",
+    "to_agent": "reviewer",
+    "body": "I wired the cast to the log data so quiet teams do not fill the whole stage.",
+    "created_at": "2026-06-24T00:10:00Z",
+    "read_at": "2026-06-24T00:10:18Z"
   },
   {
     "id": 5,
     "team": "product-studio",
-    "from_agent": "qa",
-    "to_agent": "docs",
-    "body": "The keyboard path works. I found one unclear empty-state label that should be documented.",
-    "created_at": "2026-06-24T00:16:00Z",
-    "read_at": "2026-06-24T00:16:30Z"
+    "from_agent": "reviewer",
+    "to_agent": "qa",
+    "body": "Please check that each agent keeps a stable character assignment during replay.",
+    "created_at": "2026-06-24T00:14:00Z",
+    "read_at": null
   },
   {
     "id": 6,
     "team": "product-studio",
-    "from_agent": "ops",
-    "to_agent": "lead",
-    "body": "ctrl:despawn",
+    "from_agent": "qa",
+    "to_agent": "ops",
+    "body": "The assignments look stable. I also checked the caption height during long lines.",
     "created_at": "2026-06-24T00:18:00Z",
-    "read_at": null
+    "read_at": "2026-06-24T00:18:22Z"
   },
   {
     "id": 7,
     "team": "product-studio",
+    "from_agent": "ops",
+    "to_agent": "docs",
+    "body": "ctrl:despawn",
+    "created_at": "2026-06-24T00:20:00Z",
+    "read_at": null
+  },
+  {
+    "id": 8,
+    "team": "product-studio",
     "from_agent": "docs",
-    "to_agent": "ops",
-    "body": "I added a short note for the empty state and left the release checklist ready for handoff.",
-    "created_at": "2026-06-24T00:22:00Z",
+    "to_agent": "lead",
+    "body": "I noted the entrance behavior and kept the operator checklist short.",
+    "created_at": "2026-06-24T00:23:00Z",
+    "read_at": "2026-06-24T00:23:30Z"
+  },
+  {
+    "id": 9,
+    "team": "product-studio",
+    "from_agent": "lead",
+    "to_agent": "planner",
+    "body": "Thanks. The sample now covers the full cast and one system event.",
+    "created_at": "2026-06-24T00:27:00Z",
     "read_at": null
   }
 ]

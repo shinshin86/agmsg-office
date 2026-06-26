@@ -1,4 +1,13 @@
-export type CharacterId = "miko" | "mai" | "haya" | "suzu" | "kii";
+export type CharacterId =
+  | "miko"
+  | "mai"
+  | "haya"
+  | "suzu"
+  | "kii"
+  | "rin"
+  | "nao"
+  | "mio"
+  | "sora";
 
 export type CharacterState =
   | "idle"
@@ -45,6 +54,7 @@ export interface StageCharacter {
   state: CharacterState;
   currentLine?: string;
   isActiveSpeaker: boolean;
+  entranceDelayMs: number;
 }
 
 export type AgentCharacterMap = Partial<Record<string, CharacterId>>;

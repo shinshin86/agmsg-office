@@ -33,10 +33,14 @@ const SAMPLE_LOG_URL = "/sample/agmsg-sample.json";
 
 const DEFAULT_POSITIONS: Record<CharacterId, StageCharacter["position"]> = {
   miko: { x: 13, y: 66 },
-  mai: { x: 24, y: 36 },
-  haya: { x: 46, y: 55 },
-  suzu: { x: 78, y: 34 },
-  kii: { x: 70, y: 67 },
+  mai: { x: 26, y: 36 },
+  haya: { x: 44, y: 38 },
+  suzu: { x: 62, y: 35 },
+  kii: { x: 80, y: 38 },
+  rin: { x: 30, y: 62 },
+  nao: { x: 48, y: 60 },
+  mio: { x: 66, y: 62 },
+  sora: { x: 84, y: 60 },
 };
 
 const REPLAY_DELAY_BASE_MS = 2600;
@@ -85,6 +89,7 @@ function App() {
   const [showCaption, setShowCaption] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [agmsgError, setAgmsgError] = useState("");
+  const [castKey, setCastKey] = useState(0);
   const runIdRef = useRef(0);
 
   const agentMap = useMemo<AgentCharacterMap>(
@@ -156,6 +161,7 @@ function App() {
     try {
       const rawRecords = await fetchSampleLog();
       setEntries(normalizeAgmsgRecords(rawRecords));
+      setCastKey((value) => value + 1);
       setLogSource("sample");
       setSelectedTeam("");
       setImportedFileName("");
@@ -176,6 +182,7 @@ function App() {
       try {
         const history = await fetchAgmsgHistory(teamName);
         setEntries(normalizeAgmsgRecords(history.entries));
+        setCastKey((value) => value + 1);
 
         if (history.source === "sample") {
           setSelectedTeam("");
@@ -211,6 +218,7 @@ function App() {
         const rawRecords = parseImportedLog(await file.text());
         resetPlayback();
         setEntries(normalizeAgmsgRecords(rawRecords));
+        setCastKey((value) => value + 1);
         setSelectedTeam("");
         setLogSource("import");
         setImportedFileName(file.name);
@@ -254,6 +262,7 @@ function App() {
         const rawRecords = await fetchSampleLog();
         if (!active) return;
         setEntries(normalizeAgmsgRecords(rawRecords));
+        setCastKey((value) => value + 1);
         setLogSource("sample");
         setSelectedTeam("");
         setImportedFileName("");
@@ -361,7 +370,10 @@ function App() {
               />
             )}
             {characters.map((character) => (
-              <CharacterActor character={character} key={character.id} />
+              <CharacterActor
+                character={character}
+                key={`${castKey}-${character.id}`}
+              />
             ))}
           </div>
           <div className={`caption-bar${showCaption ? "" : " is-collapsed"}`}>
@@ -534,40 +546,49 @@ function createStageCharacters({
   targetCharacterId?: CharacterId;
 }): StageCharacter[] {
   const primaryAgentByCharacter = createPrimaryAgentByCharacter(agentMap);
+  const neededCharacterIds = new Set<CharacterId>([
+    HOST_CHARACTER_ID,
+    ...Object.values(agentMap).filter(
+      (characterId): characterId is CharacterId => Boolean(characterId),
+    ),
+  ]);
 
-  return characterAssets.map((asset) => {
-    let state: CharacterState = "idle";
-    let currentLine: string | undefined;
-    let displayName =
-      asset.id === HOST_CHARACTER_ID
-        ? asset.displayName
-        : (primaryAgentByCharacter[asset.id] ?? asset.displayName);
+  return characterAssets
+    .filter((asset) => neededCharacterIds.has(asset.id))
+    .map((asset, index) => {
+      let state: CharacterState = "idle";
+      let currentLine: string | undefined;
+      let displayName =
+        asset.id === HOST_CHARACTER_ID
+          ? asset.displayName
+          : (primaryAgentByCharacter[asset.id] ?? asset.displayName);
 
-    if (hostLine && asset.id === HOST_CHARACTER_ID) {
-      state = "speaking";
-      currentLine = hostLine;
-    } else if (asset.id === activeCharacterId) {
-      state = "speaking";
-      currentLine = activeLine;
-      displayName = activeAgentName ?? displayName;
-    } else if (asset.id === targetCharacterId) {
-      state = "waiting";
-      displayName = targetAgentName ?? displayName;
-    }
+      if (hostLine && asset.id === HOST_CHARACTER_ID) {
+        state = "speaking";
+        currentLine = hostLine;
+      } else if (asset.id === activeCharacterId) {
+        state = "speaking";
+        currentLine = activeLine;
+        displayName = activeAgentName ?? displayName;
+      } else if (asset.id === targetCharacterId) {
+        state = "waiting";
+        displayName = targetAgentName ?? displayName;
+      }
 
-    return {
-      id: asset.id,
-      displayName,
-      portraitPath: asset.portraitPath,
-      spritesheetPath: asset.spritesheetPath,
-      position: DEFAULT_POSITIONS[asset.id],
-      state,
-      currentLine,
-      isActiveSpeaker:
-        (hostLine && asset.id === HOST_CHARACTER_ID) ||
-        (asset.id === activeCharacterId && isActiveSpeaker),
-    };
-  });
+      return {
+        id: asset.id,
+        displayName,
+        portraitPath: asset.portraitPath,
+        spritesheetPath: asset.spritesheetPath,
+        position: DEFAULT_POSITIONS[asset.id],
+        state,
+        currentLine,
+        isActiveSpeaker:
+          (hostLine && asset.id === HOST_CHARACTER_ID) ||
+          (asset.id === activeCharacterId && isActiveSpeaker),
+        entranceDelayMs: index * 70,
+      };
+    });
 }
 
 function createPrimaryAgentByCharacter(

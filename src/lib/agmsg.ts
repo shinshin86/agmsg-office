@@ -12,6 +12,10 @@ export const ACTOR_CHARACTER_IDS: CharacterId[] = [
   "haya",
   "suzu",
   "kii",
+  "rin",
+  "nao",
+  "mio",
+  "sora",
 ];
 
 export function normalizeAgmsg(raw: RawAgmsgRecord): AgmsgEntry {

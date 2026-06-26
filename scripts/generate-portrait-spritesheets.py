@@ -11,7 +11,7 @@ COLUMNS = 8
 ROWS = 9
 TARGET_HEIGHT = 178
 
-CHARACTERS = ("mai", "haya", "suzu", "kii")
+CHARACTERS = ("mai", "haya", "suzu", "kii", "rin", "nao", "mio", "sora")
 
 
 def alpha_bbox(image: Image.Image):

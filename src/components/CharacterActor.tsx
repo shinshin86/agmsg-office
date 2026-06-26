@@ -251,36 +251,44 @@ export function CharacterActor({ character }: CharacterActorProps) {
         top: `${motion.y}%`,
       }}
     >
-      {line && (
-        <div className="speech-bubble">
-          <strong>{character.displayName}</strong>
-          <span>{line}</span>
-        </div>
-      )}
       <div
-        aria-label={character.displayName}
-        className="character-sprite"
-        role="img"
-        style={
-          character.spritesheetPath
-            ? {
-                backgroundImage: `url(${ASSET_BASE}characters/${character.spritesheetPath})`,
-                backgroundPosition: getSpriteBackgroundPosition(row.row, frame),
-                backgroundSize: `${ATLAS_COLUMNS * 100}% ${ATLAS_ROWS * 100}%`,
-                aspectRatio: `${CELL_WIDTH} / ${CELL_HEIGHT}`,
-              }
-            : undefined
-        }
+        className="character-enter"
+        style={{ animationDelay: `${character.entranceDelayMs}ms` }}
       >
-        {!character.spritesheetPath && (
-          <img
-            alt={character.displayName}
-            className="character-portrait"
-            src={`${ASSET_BASE}characters/${character.portraitPath}`}
-          />
+        {line && (
+          <div className="speech-bubble">
+            <strong>{character.displayName}</strong>
+            <span>{line}</span>
+          </div>
         )}
+        <div
+          aria-label={character.displayName}
+          className="character-sprite"
+          role="img"
+          style={
+            character.spritesheetPath
+              ? {
+                  backgroundImage: `url(${ASSET_BASE}characters/${character.spritesheetPath})`,
+                  backgroundPosition: getSpriteBackgroundPosition(
+                    row.row,
+                    frame,
+                  ),
+                  backgroundSize: `${ATLAS_COLUMNS * 100}% ${ATLAS_ROWS * 100}%`,
+                  aspectRatio: `${CELL_WIDTH} / ${CELL_HEIGHT}`,
+                }
+              : undefined
+          }
+        >
+          {!character.spritesheetPath && (
+            <img
+              alt={character.displayName}
+              className="character-portrait"
+              src={`${ASSET_BASE}characters/${character.portraitPath}`}
+            />
+          )}
+        </div>
+        <span className="character-name">{character.displayName}</span>
       </div>
-      <span className="character-name">{character.displayName}</span>
     </div>
   );
 }

@@ -196,6 +196,13 @@ select {
   transform: translate(-50%, -50%);
 }
 
+.character-enter {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  animation: character-entrance 420ms ease-out both;
+}
+
 .character-sprite {
   width: 136px;
   max-width: 100%;
@@ -491,6 +498,17 @@ select {
   }
   50% {
     transform: translate(-50%, -50%) translateY(-2px);
+  }
+}
+
+@keyframes character-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
