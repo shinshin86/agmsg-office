@@ -1,5 +1,7 @@
 # agmsg Office
 
+English | [日本語](README.ja.md)
+
 **agmsg Office** turns [`agmsg`](https://github.com/fujibee/agmsg) agent-to-agent
 message logs into a little animated office: each agent becomes a character on a
 stage, and the conversation is replayed as speech bubbles, one message at a time.
