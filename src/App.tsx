@@ -79,6 +79,9 @@ function App() {
     "idle" | "playing" | "paused"
   >("idle");
   const [activeEntryId, setActiveEntryId] = useState<string | undefined>();
+  const [hostAnnouncement, setHostAnnouncement] = useState<
+    string | undefined
+  >();
   const [showCaption, setShowCaption] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [agmsgError, setAgmsgError] = useState("");
@@ -103,6 +106,7 @@ function App() {
     activeEntry?.toAgent && !activeEntryIsControl
       ? resolveCharacterId(activeEntry.toAgent, agentMap)
       : undefined;
+  const hostLine = hostAnnouncement ?? getControlNarration(activeEntry?.body);
   const characters = useMemo(
     () =>
       createStageCharacters({
@@ -118,6 +122,7 @@ function App() {
           ? undefined
           : activeEntry?.toAgent,
         targetCharacterId,
+        hostLine,
       }),
     [
       agentMap,
@@ -127,6 +132,7 @@ function App() {
       activeEntry?.toAgent,
       activeEntryIsControl,
       characterAssets,
+      hostLine,
       playbackStatus,
       targetCharacterId,
     ],
@@ -141,6 +147,7 @@ function App() {
     runIdRef.current += 1;
     setPlaybackStatus("idle");
     setActiveEntryId(undefined);
+    setHostAnnouncement(undefined);
   }, []);
 
   const loadSampleLog = useCallback(async () => {
@@ -282,6 +289,7 @@ function App() {
   const pauseReplay = useCallback(() => {
     runIdRef.current += 1;
     setPlaybackStatus("paused");
+    setHostAnnouncement(undefined);
   }, []);
 
   const startReplay = useCallback(async () => {
@@ -290,16 +298,32 @@ function App() {
     const runId = runIdRef.current + 1;
     runIdRef.current = runId;
     setPlaybackStatus("playing");
+    setActiveEntryId(undefined);
+
+    const firstTeam = entries[0]?.team ?? "this team";
+    setHostAnnouncement(
+      `Welcome to ${firstTeam}! Replaying ${entries.length} messages.`,
+    );
+    await sleep(REPLAY_DELAY_BASE_MS / speed);
+    if (runIdRef.current !== runId) return;
 
     for (const entry of entries) {
       if (runIdRef.current !== runId) return;
+      setHostAnnouncement(undefined);
       setActiveEntryId(entry.id);
+      await sleep(REPLAY_DELAY_BASE_MS / speed);
+    }
+
+    if (runIdRef.current === runId) {
+      setActiveEntryId(undefined);
+      setHostAnnouncement("That is the end of the log. Thanks for watching!");
       await sleep(REPLAY_DELAY_BASE_MS / speed);
     }
 
     if (runIdRef.current === runId) {
       setPlaybackStatus("idle");
       setActiveEntryId(undefined);
+      setHostAnnouncement(undefined);
     }
   }, [entries, speed]);
 
@@ -351,9 +375,11 @@ function App() {
               <span>{showCaption ? "Hide" : "Show"}</span>
             </button>
             <p className="caption-text" aria-hidden={!showCaption}>
-              {activeEntry
-                ? formatCaption(activeEntry)
-                : "Replay text will appear here."}
+              {hostAnnouncement
+                ? hostAnnouncement
+                : activeEntry
+                  ? formatCaption(activeEntry)
+                  : "Replay text will appear here."}
             </p>
           </div>
         </section>
@@ -492,6 +518,7 @@ function createStageCharacters({
   activeCharacterId,
   activeAgentName,
   activeLine,
+  hostLine,
   isActiveSpeaker,
   targetAgentName,
   targetCharacterId,
@@ -501,6 +528,7 @@ function createStageCharacters({
   activeCharacterId?: CharacterId;
   activeAgentName?: string;
   activeLine?: string;
+  hostLine?: string;
   isActiveSpeaker: boolean;
   targetAgentName?: string;
   targetCharacterId?: CharacterId;
@@ -515,7 +543,10 @@ function createStageCharacters({
         ? asset.displayName
         : (primaryAgentByCharacter[asset.id] ?? asset.displayName);
 
-    if (asset.id === activeCharacterId) {
+    if (hostLine && asset.id === HOST_CHARACTER_ID) {
+      state = "speaking";
+      currentLine = hostLine;
+    } else if (asset.id === activeCharacterId) {
       state = "speaking";
       currentLine = activeLine;
       displayName = activeAgentName ?? displayName;
@@ -532,7 +563,9 @@ function createStageCharacters({
       position: DEFAULT_POSITIONS[asset.id],
       state,
       currentLine,
-      isActiveSpeaker: asset.id === activeCharacterId && isActiveSpeaker,
+      isActiveSpeaker:
+        (hostLine && asset.id === HOST_CHARACTER_ID) ||
+        (asset.id === activeCharacterId && isActiveSpeaker),
     };
   });
 }
@@ -553,6 +586,17 @@ function formatCaption(entry: AgmsgEntry): string {
     return `System note: ${entry.body}`;
   }
   return `${entry.fromAgent} -> ${entry.toAgent}: ${entry.body}`;
+}
+
+function getControlNarration(body?: string): string | undefined {
+  if (!body || !isControlMessage(body)) return undefined;
+
+  const command = body.trimStart().slice("ctrl:".length).trim();
+  if (command === "despawn") {
+    return "Looks like an agent just stepped out.";
+  }
+
+  return `A system event came through: ${command || "unknown"}.`;
 }
 
 function formatLogMeta(entry: AgmsgEntry): string {
