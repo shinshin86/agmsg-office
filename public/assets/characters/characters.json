@@ -2,8 +2,8 @@
   {
     "id": "miko",
     "displayName": "Miko",
-    "role": "Guide / host",
-    "description": "A cheerful host character for the stage.",
+    "role": "Boss",
+    "description": "The team's cheerful boss who hosts the stage.",
     "portraitPath": "miko/portrait.png",
     "spritesheetPath": "miko/spritesheet.webp"
   },

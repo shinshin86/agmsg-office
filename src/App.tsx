@@ -583,7 +583,7 @@ function createStageCharacters({
       let currentLine: string | undefined;
       let displayName =
         asset.id === HOST_CHARACTER_ID
-          ? asset.displayName
+          ? `${asset.displayName} · ${asset.role}`
           : (primaryAgentByCharacter[asset.id] ?? asset.displayName);
 
       if (hostLine && asset.id === HOST_CHARACTER_ID) {
