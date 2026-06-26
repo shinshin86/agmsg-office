@@ -2,6 +2,8 @@
 
 [English](README.md) | 日本語
 
+![agmsg Office デモ](docs/agmsg-office-demo.gif)
+
 **agmsg Office** は、[`agmsg`](https://github.com/fujibee/agmsg) のエージェント間
 メッセージログを、小さなアニメーションのオフィスとして再生するアプリです。各エージェントが
 ステージ上のキャラクターになり、会話が 1 メッセージずつ吹き出しで再生されます。平坦な
