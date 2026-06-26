@@ -494,23 +494,32 @@ select {
 }
 
 .log-list {
-  align-content: start;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
   overflow: auto;
   min-height: 0;
 }
 
 .log-entry {
-  display: grid;
-  gap: 5px;
+  appearance: none;
+  display: block;
+  flex: 0 0 auto;
   width: 100%;
-  min-height: 0;
   padding: 14px 14px 14px 16px;
   border-radius: 6px;
   border-left-width: 3px;
   border-left-color: transparent;
   text-align: left;
   background: #f8fafc;
+}
+
+.log-entry-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
 }
 
 .log-entry:hover:not(:disabled) {
@@ -554,6 +563,7 @@ select {
 
 .log-body {
   display: block;
+  min-width: 0;
   overflow: hidden;
   color: #1f2937;
   font-size: 14px;

@@ -524,8 +524,10 @@ function App() {
                 type="button"
                 onClick={() => setActiveEntryId(entry.id)}
               >
-                <span className="log-meta">{formatLogMeta(entry)}</span>
-                <span className="log-body">{entry.body}</span>
+                <span className="log-entry-inner">
+                  <span className="log-meta">{formatLogMeta(entry)}</span>
+                  <span className="log-body">{entry.body}</span>
+                </span>
               </button>
             ))}
           </section>
