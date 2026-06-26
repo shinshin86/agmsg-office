@@ -33,14 +33,14 @@ const SAMPLE_LOG_URL = "/sample/agmsg-sample.json";
 
 const DEFAULT_POSITIONS: Record<CharacterId, StageCharacter["position"]> = {
   miko: { x: 13, y: 66 },
-  mai: { x: 26, y: 36 },
-  haya: { x: 44, y: 38 },
-  suzu: { x: 62, y: 35 },
-  kii: { x: 80, y: 38 },
-  rin: { x: 30, y: 62 },
-  nao: { x: 48, y: 60 },
-  mio: { x: 66, y: 62 },
-  sora: { x: 84, y: 60 },
+  mai: { x: 24, y: 36 },
+  haya: { x: 46, y: 55 },
+  suzu: { x: 78, y: 34 },
+  kii: { x: 70, y: 67 },
+  nao: { x: 60, y: 41 },
+  mio: { x: 35, y: 45 },
+  rin: { x: 42, y: 70 },
+  sora: { x: 60, y: 68 },
 };
 
 const REPLAY_DELAY_BASE_MS = 2600;
