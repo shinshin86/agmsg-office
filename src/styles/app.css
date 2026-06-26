@@ -156,6 +156,15 @@ select {
   flex: 1;
   min-height: 0;
   padding: 14px;
+  transition: grid-template-columns 180ms ease;
+}
+
+.workspace.is-theater {
+  grid-template-columns: 1fr;
+}
+
+.workspace.is-theater .side-panel {
+  display: none;
 }
 
 .stage-panel,
@@ -368,6 +377,13 @@ select {
   background: #ffffff;
 }
 
+.caption-controls {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border-bottom: 1px solid #eef2f7;
+}
+
 .caption-toggle {
   flex: 0 0 auto;
   display: flex;
@@ -384,9 +400,36 @@ select {
   font-size: 13px;
 }
 
+.theater-toggle {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 0;
+  border-left: 1px solid #eef2f7;
+  border-radius: 0;
+  color: #2563eb;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.theater-toggle.is-active {
+  color: #ffffff;
+  background: #2563eb;
+}
+
 .caption-toggle:hover:not(:disabled) {
   border-color: transparent;
   background: #f8fafc;
+}
+
+.theater-toggle:hover:not(:disabled) {
+  border-color: transparent;
+  border-left-color: #eef2f7;
+  background: #f8fafc;
+}
+
+.theater-toggle.is-active:hover:not(:disabled) {
+  background: #1d4ed8;
 }
 
 .caption-toggle span:last-child {
@@ -518,6 +561,17 @@ select {
 .advanced-content {
   display: grid;
   gap: 10px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-row input {
+  width: auto;
+  min-height: 0;
 }
 
 .meta-text {

@@ -3,6 +3,7 @@ export type Language = "en" | "ja";
 type Params = Record<string, number | string>;
 
 export const LANGUAGE_STORAGE_KEY = "agmsg-office.lang";
+export const SHOW_DATE_STORAGE_KEY = "agmsg-office.show-date";
 
 export const STRINGS = {
   en: {
@@ -41,6 +42,7 @@ export const STRINGS = {
     playback: "Playback",
     reloadCurrentTeam: "Reload current team",
     show: "Show",
+    showDate: "Show date",
     source: "Source",
     sourceImportedStatus: "Imported file: {name} ({count} entries)",
     sourceLiveStatus: "Live agmsg: {team} ({count} entries)",
@@ -53,6 +55,8 @@ export const STRINGS = {
     pause: "Pause",
     systemNotePrefix: "System note:",
     stageLabel: "Agent stage",
+    theater: "Theater",
+    theaterExit: "Exit theater",
     topbarSubtitle: "Replay agent messages as a character stage.",
     unknown: "unknown",
   },
@@ -93,6 +97,7 @@ export const STRINGS = {
     playback: "再生",
     reloadCurrentTeam: "現在のチームを再読み込み",
     show: "表示",
+    showDate: "日付を表示",
     source: "ソース",
     sourceImportedStatus: "インポート: {name} ({count} 件)",
     sourceLiveStatus: "Live agmsg: {team} ({count} 件)",
@@ -105,6 +110,8 @@ export const STRINGS = {
     pause: "一時停止",
     systemNotePrefix: "システムメモ:",
     stageLabel: "エージェントステージ",
+    theater: "シアター",
+    theaterExit: "シアター解除",
     topbarSubtitle:
       "エージェントのメッセージをキャラクターステージとして再生します。",
     unknown: "不明",
@@ -129,6 +136,25 @@ export function detectLanguage(): Language {
 export function saveLanguage(language: Language) {
   try {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  } catch {
+    // Ignore storage failures; the in-memory choice still applies.
+  }
+}
+
+export function detectShowDate(): boolean {
+  try {
+    const value = localStorage.getItem(SHOW_DATE_STORAGE_KEY);
+    if (value === "false") return false;
+    if (value === "true") return true;
+  } catch {
+    return true;
+  }
+  return true;
+}
+
+export function saveShowDate(showDate: boolean) {
+  try {
+    localStorage.setItem(SHOW_DATE_STORAGE_KEY, String(showDate));
   } catch {
     // Ignore storage failures; the in-memory choice still applies.
   }

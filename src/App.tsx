@@ -19,7 +19,9 @@ import {
   type I18nKey,
   type Language,
   detectLanguage,
+  detectShowDate,
   saveLanguage,
+  saveShowDate,
   t as translateString,
 } from "./lib/i18n";
 import type {
@@ -85,6 +87,8 @@ function App() {
   const [language, setLanguageState] = useState<Language>(() =>
     detectLanguage(),
   );
+  const [showDate, setShowDate] = useState(() => detectShowDate());
+  const [theaterMode, setTheaterMode] = useState(false);
   const [assetsManifest, setAssetsManifest] = useState<AssetsManifest | null>(
     null,
   );
@@ -353,6 +357,14 @@ function App() {
     [language, loadSampleLog, logSource],
   );
 
+  const toggleShowDate = useCallback(() => {
+    setShowDate((value) => {
+      const nextValue = !value;
+      saveShowDate(nextValue);
+      return nextValue;
+    });
+  }, []);
+
   const startReplay = useCallback(async () => {
     if (entries.length === 0) return;
 
@@ -424,7 +436,7 @@ function App() {
         </div>
       </header>
 
-      <section className="workspace">
+      <section className={`workspace${theaterMode ? " is-theater" : ""}`}>
         <section className="stage-panel" aria-label={t("stageLabel")}>
           <div
             className="stage-background"
@@ -456,15 +468,25 @@ function App() {
             ))}
           </div>
           <div className={`caption-bar${showCaption ? "" : " is-collapsed"}`}>
-            <button
-              aria-expanded={showCaption}
-              className="caption-toggle"
-              type="button"
-              onClick={() => setShowCaption((value) => !value)}
-            >
-              <span>{t("captionCurrentLine")}</span>
-              <span>{showCaption ? t("hide") : t("show")}</span>
-            </button>
+            <div className="caption-controls">
+              <button
+                aria-expanded={showCaption}
+                className="caption-toggle"
+                type="button"
+                onClick={() => setShowCaption((value) => !value)}
+              >
+                <span>{t("captionCurrentLine")}</span>
+                <span>{showCaption ? t("hide") : t("show")}</span>
+              </button>
+              <button
+                aria-pressed={theaterMode}
+                className={`theater-toggle${theaterMode ? " is-active" : ""}`}
+                type="button"
+                onClick={() => setTheaterMode((value) => !value)}
+              >
+                {theaterMode ? t("theaterExit") : t("theater")}
+              </button>
+            </div>
             <p className="caption-text" aria-hidden={!showCaption}>
               {hostAnnouncement
                 ? hostAnnouncement
@@ -570,6 +592,14 @@ function App() {
             </button>
             {showAdvancedSource && (
               <div className="advanced-content">
+                <label className="toggle-row">
+                  <input
+                    checked={showDate}
+                    type="checkbox"
+                    onChange={toggleShowDate}
+                  />
+                  <span>{t("showDate")}</span>
+                </label>
                 <label className="file-input">
                   {t("importJson")}
                   <input
@@ -606,7 +636,7 @@ function App() {
               >
                 <span className="log-entry-inner">
                   <span className="log-meta">
-                    {formatLogMeta(entry, language, t)}
+                    {formatLogMeta(entry, language, showDate, t)}
                   </span>
                   <span className="log-body">{entry.body}</span>
                 </span>
@@ -724,12 +754,13 @@ function getControlNarration(
 function formatLogMeta(
   entry: AgmsgEntry,
   language: Language,
+  showDate: boolean,
   t: Translate,
 ): string {
-  const time = formatClock(
-    entry.createdAt,
-    language === "ja" ? "ja-JP" : "en-US",
-  );
+  const time = formatClock(entry.createdAt, {
+    locale: language === "ja" ? "ja-JP" : "en-US",
+    showDate,
+  });
   if (isControlMessage(entry.body)) {
     return `${time} · ${t("metaSystem")}`;
   }
