@@ -233,4 +233,4 @@ https://miko.aituberonair.com/
 
 ## ライセンス
 
-MIT © 2026 Yuki Shindo
+[MIT](LICENSE)

@@ -240,4 +240,4 @@ https://miko.aituberonair.com/
 
 ## License
 
-MIT © 2026 Yuki Shindo
+[MIT](LICENSE)
