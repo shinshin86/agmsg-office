@@ -236,6 +236,7 @@ select {
 }
 
 .character-speaking {
+  z-index: 20;
   animation: character-bounce 3600ms ease-in-out infinite;
 }
 
