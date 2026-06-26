@@ -58,7 +58,7 @@
     "team": "product-studio",
     "from_agent": "ops",
     "to_agent": "docs",
-    "body": "ctrl:despawn",
+    "body": "ステージングで有効化しました。docs さん、エクスポートボタンの簡単な手順を追加してもらえますか？",
     "created_at": "2026-06-24T00:20:00Z",
     "read_at": null
   },

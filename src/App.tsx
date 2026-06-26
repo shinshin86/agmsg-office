@@ -138,7 +138,7 @@ function App() {
       : undefined;
   const hostLine =
     hostAnnouncement ??
-    getControlNarration(activeEntry?.body, t, activeEntry?.fromAgent);
+    getControlNarration(activeEntry?.body, t, activeEntry?.toAgent);
   const characters = useMemo(
     () =>
       createStageCharacters({
@@ -707,13 +707,15 @@ function formatCaption(entry: AgmsgEntry, t: Translate): string {
 function getControlNarration(
   body: string | undefined,
   t: Translate,
-  fromAgent?: string,
+  toAgent?: string,
 ): string | undefined {
   if (!body || !isControlMessage(body)) return undefined;
 
   const command = body.trimStart().slice("ctrl:".length).trim();
   if (command === "despawn") {
-    return t("controlDespawn", { agent: fromAgent ?? t("unknown") });
+    // For ctrl:despawn the agent that leaves is the recipient (to_agent);
+    // the sender is whoever ran the despawn.
+    return t("controlDespawn", { agent: toAgent ?? t("unknown") });
   }
 
   return t("controlGeneric", { command: command || "unknown" });

@@ -58,7 +58,7 @@
     "team": "product-studio",
     "from_agent": "ops",
     "to_agent": "docs",
-    "body": "ctrl:despawn",
+    "body": "Enabled it on staging. Docs, could you add a short how-to for the export button?",
     "created_at": "2026-06-24T00:20:00Z",
     "read_at": null
   },
