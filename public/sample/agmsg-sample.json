@@ -4,7 +4,7 @@
     "team": "product-studio",
     "from_agent": "lead",
     "to_agent": "planner",
-    "body": "Please frame the replay polish work into a short plan.",
+    "body": "Let's plan the CSV export feature for the reports page. Can you break it into tasks?",
     "created_at": "2026-06-24T00:00:00Z",
     "read_at": "2026-06-24T00:00:06Z"
   },
@@ -13,7 +13,7 @@
     "team": "product-studio",
     "from_agent": "planner",
     "to_agent": "design",
-    "body": "I split it into cast coverage, motion timing, and a quick source-switch check.",
+    "body": "Tasks: an export button, a loading state, and a success toast. Design, where should the button sit?",
     "created_at": "2026-06-24T00:03:00Z",
     "read_at": "2026-06-24T00:03:12Z"
   },
@@ -22,7 +22,7 @@
     "team": "product-studio",
     "from_agent": "design",
     "to_agent": "dev",
-    "body": "The stage can stay calm if the new actors enter with a small rise and fade.",
+    "body": "Put the Export button at the top-right of the reports toolbar, with a spinner while the file is generated.",
     "created_at": "2026-06-24T00:06:00Z",
     "read_at": null
   },
@@ -31,7 +31,7 @@
     "team": "product-studio",
     "from_agent": "dev",
     "to_agent": "reviewer",
-    "body": "I wired the cast to the log data so quiet teams do not fill the whole stage.",
+    "body": "I implemented the export endpoint and the button. The PR is up. Could you review the streaming logic?",
     "created_at": "2026-06-24T00:10:00Z",
     "read_at": "2026-06-24T00:10:18Z"
   },
@@ -40,7 +40,7 @@
     "team": "product-studio",
     "from_agent": "reviewer",
     "to_agent": "qa",
-    "body": "Please check that each agent keeps a stable character assignment during replay.",
+    "body": "Looks good. I just renamed one helper. QA, please test exporting a large report and an empty one.",
     "created_at": "2026-06-24T00:14:00Z",
     "read_at": null
   },
@@ -49,7 +49,7 @@
     "team": "product-studio",
     "from_agent": "qa",
     "to_agent": "ops",
-    "body": "The assignments look stable. I also checked the caption height during long lines.",
+    "body": "Both cases pass. The empty report exports a header-only file. Ops, can we enable it on staging?",
     "created_at": "2026-06-24T00:18:00Z",
     "read_at": "2026-06-24T00:18:22Z"
   },
@@ -67,7 +67,7 @@
     "team": "product-studio",
     "from_agent": "docs",
     "to_agent": "lead",
-    "body": "I noted the entrance behavior and kept the operator checklist short.",
+    "body": "I documented the export button and added a short how-to to the user guide.",
     "created_at": "2026-06-24T00:23:00Z",
     "read_at": "2026-06-24T00:23:30Z"
   },
@@ -76,7 +76,7 @@
     "team": "product-studio",
     "from_agent": "lead",
     "to_agent": "planner",
-    "body": "Thanks. The sample now covers the full cast and one system event.",
+    "body": "Thanks, everyone. CSV export is ready to ship in the next release.",
     "created_at": "2026-06-24T00:27:00Z",
     "read_at": null
   }
