@@ -502,7 +502,7 @@ select {
 
 .log-entry {
   display: grid;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
   min-height: 0;
   padding: 14px 14px 14px 16px;
@@ -553,14 +553,13 @@ select {
 }
 
 .log-body {
-  display: -webkit-box;
+  display: block;
   overflow: hidden;
   color: #1f2937;
   font-size: 14px;
-  line-height: 1.75;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  line-height: 1.55;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .error-text {
