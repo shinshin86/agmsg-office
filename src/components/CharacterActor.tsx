@@ -242,10 +242,13 @@ export function CharacterActor({ character }: CharacterActorProps) {
   const line = character.currentLine
     ? truncateText(character.currentLine, MAX_BUBBLE_CHARS)
     : "";
+  const bubbleBelow = character.position.y < 50;
 
   return (
     <div
-      className={`character character-${character.id} character-${character.state}`}
+      className={`character character-${character.id} character-${character.state}${
+        bubbleBelow ? " character-bubble-below" : ""
+      }`}
       style={{
         left: `${motion.x}%`,
         top: `${motion.y}%`,
