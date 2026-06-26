@@ -2,7 +2,7 @@ export type Language = "en" | "ja";
 
 type Params = Record<string, number | string>;
 
-export const LANGUAGE_STORAGE_KEY = "agmsg-office:lang";
+export const LANGUAGE_STORAGE_KEY = "agmsg-office.lang";
 
 export const STRINGS = {
   en: {
@@ -10,7 +10,7 @@ export const STRINGS = {
     agentsPrefix: "Agents:",
     captionCurrentLine: "Current line",
     captionPlaceholder: "Replay text will appear here.",
-    controlDespawn: "Looks like an agent just stepped out.",
+    controlDespawn: "{agent} left the session.",
     controlGeneric: "A system event came through: {command}.",
     errorImportInvalidJson:
       "Import failed. The selected file is not valid JSON.",
@@ -61,7 +61,7 @@ export const STRINGS = {
     agentsPrefix: "エージェント:",
     captionCurrentLine: "現在の行",
     captionPlaceholder: "再生テキストがここに表示されます。",
-    controlDespawn: "エージェントが退出したようです。",
+    controlDespawn: "{agent} がセッションから退出しました。",
     controlGeneric: "システムイベントを受信しました: {command}。",
     errorImportInvalidJson:
       "インポートに失敗しました。選択したファイルは有効な JSON ではありません。",

@@ -137,7 +137,8 @@ function App() {
       ? resolveCharacterId(activeEntry.toAgent, agentMap)
       : undefined;
   const hostLine =
-    hostAnnouncement ?? getControlNarration(activeEntry?.body, t);
+    hostAnnouncement ??
+    getControlNarration(activeEntry?.body, t, activeEntry?.fromAgent);
   const characters = useMemo(
     () =>
       createStageCharacters({
@@ -706,12 +707,13 @@ function formatCaption(entry: AgmsgEntry, t: Translate): string {
 function getControlNarration(
   body: string | undefined,
   t: Translate,
+  fromAgent?: string,
 ): string | undefined {
   if (!body || !isControlMessage(body)) return undefined;
 
   const command = body.trimStart().slice("ctrl:".length).trim();
   if (command === "despawn") {
-    return t("controlDespawn");
+    return t("controlDespawn", { agent: fromAgent ?? t("unknown") });
   }
 
   return t("controlGeneric", { command: command || "unknown" });
