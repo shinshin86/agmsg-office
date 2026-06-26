@@ -420,7 +420,7 @@ select {
   position: sticky;
   top: 0;
   z-index: 2;
-  margin: -12px -12px 4px;
+  margin: 0 -12px 6px;
   padding: 12px 12px 10px;
   background: #ffffff;
   border-bottom: 1px solid #eef2f7;
@@ -508,6 +508,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  padding-top: 0;
   overflow: auto;
   min-height: 0;
 }
