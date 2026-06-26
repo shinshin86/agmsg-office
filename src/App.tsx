@@ -92,6 +92,7 @@ function App() {
   const [agmsgError, setAgmsgError] = useState("");
   const [castKey, setCastKey] = useState(0);
   const runIdRef = useRef(0);
+  const activeLogEntryRef = useRef<HTMLButtonElement | null>(null);
 
   const agentMap = useMemo<AgentCharacterMap>(
     () => createAgentCharacterMap(entries),
@@ -337,6 +338,14 @@ function App() {
     }
   }, [entries, speed]);
 
+  useEffect(() => {
+    if (!activeEntryId) return;
+    activeLogEntryRef.current?.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [activeEntryId]);
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -521,6 +530,7 @@ function App() {
                   entry.id === activeEntryId ? " is-active" : ""
                 }${isControlMessage(entry.body) ? " is-system" : ""}`}
                 key={entry.id}
+                ref={entry.id === activeEntryId ? activeLogEntryRef : null}
                 type="button"
                 onClick={() => setActiveEntryId(entry.id)}
               >
