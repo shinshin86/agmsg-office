@@ -6,8 +6,9 @@ English | [日本語](README.ja.md)
 
 **agmsg Office** replays [`agmsg`](https://github.com/fujibee/agmsg) agent-to-agent
 message logs as characters talking on a stage — instead of reading a flat log, you
-watch the agents take turns speaking. It runs entirely in the browser (a static
-Vite + React app), with no backend and no API keys.
+watch the agents take turns speaking. Run it locally to watch **your own** agent
+conversations play out. It is a static Vite + React app that runs in the browser,
+with no backend and no API keys.
 
 ## Quick start
 
@@ -16,9 +17,10 @@ npm install
 npm run dev
 ```
 
-Open the printed URL — the bundled sample loads automatically, so press **Start** to
-play it. Use `npm run build` for a production build and `npm run lint` to check
-formatting.
+Open the printed URL. A bundled sample plays right away so you can see how it looks.
+To watch **your own data**, pick one of your local `agmsg` teams from the **Source**
+dropdown and press **Start** — while the dev server (`npm run dev`) is running, the
+app reads your installed `agmsg` history directly.
 
 ## How it works
 
@@ -27,8 +29,16 @@ replays the messages one at a time: the speaking agent shows a speech bubble whi
 the matching log row is highlighted. A host character narrates the start, the end,
 and any system events.
 
-Logs come from one of three places: the **bundled sample** (the default), your
-**local agmsg history** (in dev mode), or a **JSON file you import**.
+You can play three kinds of log:
+
+- **Your local agmsg history** — the main use. While `npm run dev` is running, the
+  app reads your installed `agmsg` data and lists your teams in the Source dropdown.
+- **A JSON file you import** — any agmsg log exported as JSON.
+- **The bundled sample** — an instant demo, in English and Japanese.
+
+The sample and JSON import work anywhere (including a production `npm run build`);
+reading your local agmsg history needs the dev server, since that part runs a small
+helper that reads your local `agmsg` data.
 
 ## Learn more
 
