@@ -1,4 +1,4 @@
-# agmsg Office — Details
+# agmsg Office Details
 
 [← Back to README](../README.md)
 
@@ -9,45 +9,46 @@ overview and quick start, see the [README](../README.md).
 
 The controls live in the side panel:
 
-- **Source** — pick the log to play: **Sample**, or any local `agmsg` team (dev
-  mode). Selecting a source loads it; it does not auto-play.
-- **Playback** — **Start** / **Stop** (a toggle), **Pause**, and a **Speed** slider.
-- **Advanced** (collapsed by default) — **Import JSON**, **Reload current team**, and
-  a **Show date** toggle for the log timestamps.
-- **Language** — `EN` / `日本語` toggle in the header (auto-detected from the browser
-  and remembered across visits).
-- **Theater** — a toggle in the caption bar that hides the side panel and expands the
+- **Source**: choose what to play (Sample, or any local `agmsg` team in dev mode).
+  Selecting a source loads it; it does not auto-play.
+- **Playback**: **Start** / **Stop** (a toggle), **Pause**, and a **Speed** slider.
+- **Advanced** (collapsed by default): **Import JSON**, **Reload current team**, and a
+  **Show date** toggle for the log timestamps.
+- **Language**: an `EN` / `日本語` toggle in the header, auto-detected from the browser
+  and remembered across visits.
+- **Theater**: a toggle in the caption bar that hides the side panel and expands the
   stage to full width. Toggle it again to exit.
-- **Current line** — the caption bar shows the active message; it is collapsible and
+- **Current line**: the caption bar shows the active message. It is collapsible and
   fixed-height so the stage does not jump while playing.
 
 ## How it works
 
 The app is a small pipeline from raw log records to an animated stage:
 
-1. **Load** — a log source provides raw records in the `agmsg` message-table shape
-   (see [Log format](#log-format)): the bundled sample, the local `agmsg` dev API,
-   or an imported JSON file.
-2. **Normalize** — `src/lib/agmsg.ts` converts raw records to internal entries
-   (`from_agent` → `fromAgent`, etc.) and sorts them by the numeric `id`, which is
-   agmsg's authoritative ordering. This is the single place log shape is handled.
-3. **Assign characters** — distinct agent names are mapped to actor characters in
+1. **Load**: a log source provides raw records in the `agmsg` message-table shape
+   (see [Log format](#log-format)). Sources are the bundled sample, the local `agmsg`
+   dev API, or an imported JSON file.
+2. **Normalize**: `src/lib/agmsg.ts` converts raw records to internal entries
+   (`from_agent` becomes `fromAgent`, and so on) and sorts them by the numeric `id`,
+   which is agmsg's authoritative ordering. This is the single place log shape is
+   handled.
+3. **Assign characters**: distinct agent names are mapped to actor characters in
    first-seen order. When a log has more agents than actor sprites, the extras share a
    sprite via a stable hash of the name, so the same agent always gets the same
    character. The real agent name is always shown on the nameplate and bubble. The
    host ("Boss") is reserved and never represents an agent.
-4. **Replay** — a timer steps through the entries (the Speed control changes the
-   interval). For each entry, the sending agent's character starts "speaking" with a
-   bubble, the receiving agent is marked "waiting", and the matching log row is
+4. **Replay**: a timer steps through the entries (the Speed control changes the
+   interval). For each entry, the sending agent's character starts speaking with a
+   bubble, the receiving agent is marked waiting, and the matching log row is
    highlighted and scrolled into view.
-5. **Host narration** — before the first entry the host announces an intro and after
+5. **Host narration**: before the first entry the host announces an intro, and after
    the last entry an outro. Rows whose body starts with `ctrl:` (agmsg control
-   messages, e.g. `ctrl:despawn`) are not speech: they render as a muted system note,
-   and the host narrates them (for `ctrl:despawn`, naming the agent that left — the
-   recipient).
-6. **Render** — `src/components/CharacterActor.tsx` draws each character from a
-   spritesheet with idle / walk / gesture motion. Only the characters used by the
-   current log appear (plus the host); they animate in when a log loads.
+   messages such as `ctrl:despawn`) are not speech. They render as a muted system
+   note, and the host narrates them. For `ctrl:despawn` it names the agent that left,
+   which is the recipient.
+6. **Render**: `src/components/CharacterActor.tsx` draws each character from a
+   spritesheet with idle, walk, and gesture motion. Only the characters used by the
+   current log appear (plus the host), and they animate in when a log loads.
 
 All of the above is client-side React state. The only server-side code is the
 optional dev API in `vite.config.ts`, which runs only during `npm run dev`.
@@ -84,7 +85,7 @@ sample. This middleware is dev-only and never ships in the production build.
 
 ### 3. Manual JSON import
 
-Use **Import JSON** (in **Advanced**) to load a local `.json` file — an array of
+Use **Import JSON** (in **Advanced**) to load a local `.json` file: an array of
 records in the shape below.
 
 `agmsg` stores messages in SQLite and has no built-in JSON export, but the table maps
@@ -116,14 +117,14 @@ Each record mirrors the `agmsg` `messages` table:
 }
 ```
 
-A row whose `body` starts with `ctrl:` (e.g. `ctrl:despawn`) is an agmsg control
+A row whose `body` starts with `ctrl:` (such as `ctrl:despawn`) is an agmsg control
 message and is shown as a system note rather than character speech.
 
 ## Characters
 
-The host is **Boss** (the Miko character); she is always on stage, hosts the replay,
+The host is **Boss** (the Miko character). She is always on stage, hosts the replay,
 and never represents an agent. The actor sprites are **Mai, Haya, Suzu, Kii, Rin,
-Nao, Mio, and Sora** — eight characters, one per distinct agent.
+Nao, Mio, and Sora** (eight characters, one per distinct agent).
 
 Agents fill the actor slots in first-seen order. With more than eight distinct
 agents, the extras share an actor sprite via a stable name hash; the real agent name
@@ -136,7 +137,7 @@ teams have no hard size limit, so this keeps any team viewable.
 src/
   App.tsx                     # app shell: stage, controls, log panel, replay engine
   components/CharacterActor.tsx  # character sprite, motion, and speech bubble
-  lib/agmsg.ts                # log normalization + agent→character mapping + formatting
+  lib/agmsg.ts                # log normalization + agent-to-character mapping + formatting
   lib/i18n.ts                 # UI strings (en/ja) and language/date helpers
   types.ts                    # shared types
   styles/app.css              # styles (light, simple theme)
