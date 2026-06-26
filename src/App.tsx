@@ -757,14 +757,17 @@ function formatLogMeta(
   showDate: boolean,
   t: Translate,
 ): string {
-  const time = formatClock(entry.createdAt, {
-    locale: language === "ja" ? "ja-JP" : "en-US",
-    showDate,
-  });
-  if (isControlMessage(entry.body)) {
-    return `${time} · ${t("metaSystem")}`;
+  const agents = isControlMessage(entry.body)
+    ? t("metaSystem")
+    : `${entry.fromAgent} -> ${entry.toAgent}`;
+  if (!showDate) {
+    return agents;
   }
-  return `${time} · ${entry.fromAgent} -> ${entry.toAgent}`;
+  const time = formatClock(
+    entry.createdAt,
+    language === "ja" ? "ja-JP" : "en-US",
+  );
+  return `${time} · ${agents}`;
 }
 
 function formatLogHeading(
