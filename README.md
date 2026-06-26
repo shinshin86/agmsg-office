@@ -12,7 +12,7 @@ Instead of reading a flat log, you watch the agents "talk" to each other.
 ([`agmsg`](https://github.com/fujibee/agmsg) is cross-agent messaging for CLI AI
 agents — a shared local SQLite "inbox" with no daemon and no network.)
 
-It runs entirely in the browser — no backend, no API keys, no audio. The whole
+It runs entirely in the browser — no backend and no API keys. The whole
 thing is a static Vite + React app; the only server-side piece is an optional
 dev-only helper that can read your local `agmsg` history while you run it.
 
@@ -35,7 +35,7 @@ dev-only helper that can read your local `agmsg` history while you run it.
   remembered across visits). The bundled demo log is available in both languages.
 - **Theater mode** — hide the side panel and expand the stage to full width to focus
   on the characters.
-- **Browser-only** — no server to run, no API key, no telemetry, no audio.
+- **Browser-only** — no server to run, no API key, no telemetry.
 
 ## Tech stack
 
