@@ -307,6 +307,14 @@ select {
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
 }
 
+.character-miko .speech-bubble {
+  transform: translateX(-18px);
+}
+
+.character-miko .speech-bubble::after {
+  left: 18px;
+}
+
 .caption-bar {
   display: flex;
   flex-direction: column;
