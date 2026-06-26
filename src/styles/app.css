@@ -120,6 +120,29 @@ select {
   line-height: 1.45;
 }
 
+.language-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.language-toggle button {
+  min-height: 30px;
+  padding: 0 10px;
+  border-color: transparent;
+  background: transparent;
+  font-size: 12px;
+}
+
+.language-toggle button.is-active {
+  color: #ffffff;
+  background: #2563eb;
+}
+
 .button-row {
   display: flex;
   align-items: center;

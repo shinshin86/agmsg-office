@@ -15,6 +15,13 @@ import {
   normalizeAgmsgRecords,
   resolveCharacterId,
 } from "./lib/agmsg";
+import {
+  type I18nKey,
+  type Language,
+  detectLanguage,
+  saveLanguage,
+  t as translateString,
+} from "./lib/i18n";
 import type {
   AgentCharacterMap,
   AgmsgEntry,
@@ -29,7 +36,10 @@ import type {
 import "./styles/app.css";
 
 const ASSET_BASE = "/assets/";
-const SAMPLE_LOG_URL = "/sample/agmsg-sample.json";
+const SAMPLE_LOG_URLS: Record<Language, string> = {
+  en: "/sample/agmsg-sample.json",
+  ja: "/sample/agmsg-sample.ja.json",
+};
 
 const DEFAULT_POSITIONS: Record<CharacterId, StageCharacter["position"]> = {
   miko: { x: 13, y: 66 },
@@ -66,8 +76,15 @@ type AgmsgHistoryResult = {
 };
 
 type LogSource = "agmsg" | "sample" | "import";
+type Translate = (
+  key: I18nKey,
+  params?: Record<string, number | string>,
+) => string;
 
 function App() {
+  const [language, setLanguageState] = useState<Language>(() =>
+    detectLanguage(),
+  );
   const [assetsManifest, setAssetsManifest] = useState<AssetsManifest | null>(
     null,
   );
@@ -92,7 +109,13 @@ function App() {
   const [agmsgError, setAgmsgError] = useState("");
   const [castKey, setCastKey] = useState(0);
   const runIdRef = useRef(0);
+  const initialLanguageRef = useRef(language);
   const activeLogEntryRef = useRef<HTMLButtonElement | null>(null);
+  const t = useCallback(
+    (key: I18nKey, params?: Record<string, number | string>) =>
+      translateString(language, key, params),
+    [language],
+  );
 
   const agentMap = useMemo<AgentCharacterMap>(
     () => createAgentCharacterMap(entries),
@@ -113,7 +136,8 @@ function App() {
     activeEntry?.toAgent && !activeEntryIsControl
       ? resolveCharacterId(activeEntry.toAgent, agentMap)
       : undefined;
-  const hostLine = hostAnnouncement ?? getControlNarration(activeEntry?.body);
+  const hostLine =
+    hostAnnouncement ?? getControlNarration(activeEntry?.body, t);
   const characters = useMemo(
     () =>
       createStageCharacters({
@@ -157,23 +181,26 @@ function App() {
     setHostAnnouncement(undefined);
   }, []);
 
-  const loadSampleLog = useCallback(async () => {
-    setLogLoading(true);
-    resetPlayback();
-    try {
-      const rawRecords = await fetchSampleLog();
-      setEntries(normalizeAgmsgRecords(rawRecords));
-      setCastKey((value) => value + 1);
-      setLogSource("sample");
-      setSelectedTeam("");
-      setImportedFileName("");
-      setAgmsgError("");
-    } catch (error) {
-      setAgmsgError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setLogLoading(false);
-    }
-  }, [resetPlayback]);
+  const loadSampleLog = useCallback(
+    async (nextLanguage = language) => {
+      setLogLoading(true);
+      resetPlayback();
+      try {
+        const rawRecords = await fetchSampleLog(nextLanguage);
+        setEntries(normalizeAgmsgRecords(rawRecords));
+        setCastKey((value) => value + 1);
+        setLogSource("sample");
+        setSelectedTeam("");
+        setImportedFileName("");
+        setAgmsgError("");
+      } catch (error) {
+        setAgmsgError(error instanceof Error ? error.message : String(error));
+      } finally {
+        setLogLoading(false);
+      }
+    },
+    [language, resetPlayback],
+  );
 
   const loadAgmsgTeam = useCallback(
     async (teamName: string) => {
@@ -182,8 +209,12 @@ function App() {
       setLogLoading(true);
       resetPlayback();
       try {
-        const history = await fetchAgmsgHistory(teamName);
-        setEntries(normalizeAgmsgRecords(history.entries));
+        const history = await fetchAgmsgHistory(teamName, language);
+        const rawRecords =
+          history.source === "sample"
+            ? await fetchSampleLog(language)
+            : history.entries;
+        setEntries(normalizeAgmsgRecords(rawRecords));
         setCastKey((value) => value + 1);
 
         if (history.source === "sample") {
@@ -191,9 +222,9 @@ function App() {
           setLogSource("sample");
           setImportedFileName("");
           setAgmsgError(
-            `Using sample log: ${
-              history.fallbackReason ?? "Local agmsg data is unavailable."
-            }`,
+            t("errorUsingSample", {
+              reason: localizeFallbackReason(history.fallbackReason, language),
+            }),
           );
         } else {
           setSelectedTeam(teamName);
@@ -207,7 +238,7 @@ function App() {
         setLogLoading(false);
       }
     },
-    [resetPlayback],
+    [language, resetPlayback, t],
   );
 
   const importJsonLog = useCallback(
@@ -217,7 +248,7 @@ function App() {
       if (!file) return;
 
       try {
-        const rawRecords = parseImportedLog(await file.text());
+        const rawRecords = parseImportedLog(await file.text(), t);
         resetPlayback();
         setEntries(normalizeAgmsgRecords(rawRecords));
         setCastKey((value) => value + 1);
@@ -227,13 +258,11 @@ function App() {
         setAgmsgError("");
       } catch (error) {
         setAgmsgError(
-          error instanceof Error
-            ? error.message
-            : "Import failed. Choose a JSON file containing agmsg message records.",
+          error instanceof Error ? error.message : t("errorImportRead"),
         );
       }
     },
-    [resetPlayback],
+    [resetPlayback, t],
   );
 
   useEffect(() => {
@@ -243,7 +272,9 @@ function App() {
       try {
         const assetResponse = await fetch(`${ASSET_BASE}assets.json`);
         if (!assetResponse.ok) {
-          throw new Error("Failed to load assets.json");
+          throw new Error(
+            translateString(initialLanguageRef.current, "errorLoadAssets"),
+          );
         }
 
         const nextAssets = (await assetResponse.json()) as AssetsManifest;
@@ -251,7 +282,9 @@ function App() {
           `${ASSET_BASE}${nextAssets.characters}`,
         );
         if (!characterResponse.ok) {
-          throw new Error("Failed to load character assets");
+          throw new Error(
+            translateString(initialLanguageRef.current, "errorLoadCharacters"),
+          );
         }
 
         const nextCharacters =
@@ -261,7 +294,7 @@ function App() {
         setAssetsManifest(nextAssets);
         setCharacterAssets(nextCharacters);
 
-        const rawRecords = await fetchSampleLog();
+        const rawRecords = await fetchSampleLog(initialLanguageRef.current);
         if (!active) return;
         setEntries(normalizeAgmsgRecords(rawRecords));
         setCastKey((value) => value + 1);
@@ -270,10 +303,14 @@ function App() {
         setImportedFileName("");
 
         try {
-          const nextTeams = await fetchAgmsgTeams();
+          const nextTeams = await fetchAgmsgTeams(initialLanguageRef.current);
           if (!active) return;
           setTeams(nextTeams);
-          setAgmsgError("");
+          setAgmsgError(
+            nextTeams.length === 0
+              ? translateString(initialLanguageRef.current, "errorNoTeams")
+              : "",
+          );
         } catch {
           if (!active) return;
           setTeams([]);
@@ -303,6 +340,18 @@ function App() {
     setHostAnnouncement(undefined);
   }, []);
 
+  const setAppLanguage = useCallback(
+    (nextLanguage: Language) => {
+      if (nextLanguage === language) return;
+      saveLanguage(nextLanguage);
+      setLanguageState(nextLanguage);
+      if (logSource === "sample") {
+        void loadSampleLog(nextLanguage);
+      }
+    },
+    [language, loadSampleLog, logSource],
+  );
+
   const startReplay = useCallback(async () => {
     if (entries.length === 0) return;
 
@@ -311,9 +360,12 @@ function App() {
     setPlaybackStatus("playing");
     setActiveEntryId(undefined);
 
-    const firstTeam = entries[0]?.team ?? "this team";
+    const firstTeam = entries[0]?.team ?? t("teamFallback");
     setHostAnnouncement(
-      `Welcome to ${firstTeam}! Replaying ${entries.length} messages.`,
+      t("narrationIntro", {
+        team: firstTeam,
+        count: entries.length,
+      }),
     );
     await sleep(REPLAY_DELAY_BASE_MS / speed);
     if (runIdRef.current !== runId) return;
@@ -327,7 +379,7 @@ function App() {
 
     if (runIdRef.current === runId) {
       setActiveEntryId(undefined);
-      setHostAnnouncement("That is the end of the log. Thanks for watching!");
+      setHostAnnouncement(t("narrationOutro"));
       await sleep(REPLAY_DELAY_BASE_MS / speed);
     }
 
@@ -336,7 +388,7 @@ function App() {
       setActiveEntryId(undefined);
       setHostAnnouncement(undefined);
     }
-  }, [entries, speed]);
+  }, [entries, speed, t]);
 
   useEffect(() => {
     if (!activeEntryId) return;
@@ -351,12 +403,28 @@ function App() {
       <header className="topbar">
         <div>
           <h1>agmsg Office</h1>
-          <p>Replay agent messages as a character stage.</p>
+          <p>{t("topbarSubtitle")}</p>
+        </div>
+        <div className="language-toggle" aria-label={t("language")}>
+          <button
+            className={language === "en" ? "is-active" : ""}
+            type="button"
+            onClick={() => setAppLanguage("en")}
+          >
+            EN
+          </button>
+          <button
+            className={language === "ja" ? "is-active" : ""}
+            type="button"
+            onClick={() => setAppLanguage("ja")}
+          >
+            日本語
+          </button>
         </div>
       </header>
 
       <section className="workspace">
-        <section className="stage-panel" aria-label="Agent stage">
+        <section className="stage-panel" aria-label={t("stageLabel")}>
           <div
             className="stage-background"
             style={{
@@ -393,24 +461,24 @@ function App() {
               type="button"
               onClick={() => setShowCaption((value) => !value)}
             >
-              <span>Current line</span>
-              <span>{showCaption ? "Hide" : "Show"}</span>
+              <span>{t("captionCurrentLine")}</span>
+              <span>{showCaption ? t("hide") : t("show")}</span>
             </button>
             <p className="caption-text" aria-hidden={!showCaption}>
               {hostAnnouncement
                 ? hostAnnouncement
                 : activeEntry
-                  ? formatCaption(activeEntry)
-                  : "Replay text will appear here."}
+                  ? formatCaption(activeEntry, t)
+                  : t("captionPlaceholder")}
             </p>
           </div>
         </section>
 
         <aside className="side-panel">
           <section className="controls-section">
-            <h2>Source</h2>
+            <h2>{t("source")}</h2>
             <label>
-              Source
+              {t("source")}
               <select
                 disabled={logLoading}
                 value={logSource === "agmsg" ? selectedTeam : ""}
@@ -423,7 +491,7 @@ function App() {
                   }
                 }}
               >
-                <option value="">Sample</option>
+                <option value="">{t("sourceSampleOption")}</option>
                 {teams.map((team) => (
                   <option key={team.name} value={team.name}>
                     {team.name}
@@ -438,22 +506,23 @@ function App() {
                 loading: logLoading,
                 logSource,
                 selectedTeam,
+                t,
               })}
             </p>
             {logSource === "agmsg" && teams.length > 0 && (
               <p className="meta-text">
-                Agents:{" "}
+                {t("agentsPrefix")}{" "}
                 {teams
                   .find((team) => team.name === selectedTeam)
                   ?.agents.join(", ")
-                  .trim() || "unknown"}
+                  .trim() || t("unknown")}
               </p>
             )}
             {agmsgError && <p className="error-text">{agmsgError}</p>}
           </section>
 
           <section className="controls-section">
-            <h2>Playback</h2>
+            <h2>{t("playback")}</h2>
             <div className="playback-actions">
               <button
                 className="primary-playback-button"
@@ -464,18 +533,18 @@ function App() {
                     : () => void startReplay()
                 }
               >
-                {playbackStatus === "playing" ? "Stop" : "Start"}
+                {playbackStatus === "playing" ? t("stop") : t("start")}
               </button>
               <button
                 disabled={playbackStatus !== "playing"}
                 type="button"
                 onClick={pauseReplay}
               >
-                Pause
+                {t("pause")}
               </button>
             </div>
             <label>
-              Speed
+              {t("speed")}
               <input
                 max="2"
                 min="0.5"
@@ -495,13 +564,13 @@ function App() {
               type="button"
               onClick={() => setShowAdvancedSource((value) => !value)}
             >
-              <span>Advanced</span>
-              <span>{showAdvancedSource ? "Hide" : "Show"}</span>
+              <span>{t("advanced")}</span>
+              <span>{showAdvancedSource ? t("hide") : t("show")}</span>
             </button>
             {showAdvancedSource && (
               <div className="advanced-content">
                 <label className="file-input">
-                  Import JSON
+                  {t("importJson")}
                   <input
                     accept="application/json,.json"
                     type="file"
@@ -515,14 +584,14 @@ function App() {
                   type="button"
                   onClick={() => void loadAgmsgTeam(selectedTeam)}
                 >
-                  Reload current team
+                  {t("reloadCurrentTeam")}
                 </button>
               </div>
             )}
           </section>
 
-          <section className="log-list" aria-label="agmsg entries">
-            <h2>{formatLogHeading(logSource, selectedTeam)}</h2>
+          <section className="log-list" aria-label={t("logListLabel")}>
+            <h2>{formatLogHeading(logSource, selectedTeam, t)}</h2>
             {loadError && <p className="error-text">{loadError}</p>}
             {entries.map((entry) => (
               <button
@@ -535,7 +604,9 @@ function App() {
                 onClick={() => setActiveEntryId(entry.id)}
               >
                 <span className="log-entry-inner">
-                  <span className="log-meta">{formatLogMeta(entry)}</span>
+                  <span className="log-meta">
+                    {formatLogMeta(entry, language, t)}
+                  </span>
                   <span className="log-body">{entry.body}</span>
                 </span>
               </button>
@@ -625,36 +696,50 @@ function createPrimaryAgentByCharacter(
   return primaryAgentByCharacter;
 }
 
-function formatCaption(entry: AgmsgEntry): string {
+function formatCaption(entry: AgmsgEntry, t: Translate): string {
   if (isControlMessage(entry.body)) {
-    return `System note: ${entry.body}`;
+    return `${t("systemNotePrefix")} ${entry.body}`;
   }
   return `${entry.fromAgent} -> ${entry.toAgent}: ${entry.body}`;
 }
 
-function getControlNarration(body?: string): string | undefined {
+function getControlNarration(
+  body: string | undefined,
+  t: Translate,
+): string | undefined {
   if (!body || !isControlMessage(body)) return undefined;
 
   const command = body.trimStart().slice("ctrl:".length).trim();
   if (command === "despawn") {
-    return "Looks like an agent just stepped out.";
+    return t("controlDespawn");
   }
 
-  return `A system event came through: ${command || "unknown"}.`;
+  return t("controlGeneric", { command: command || "unknown" });
 }
 
-function formatLogMeta(entry: AgmsgEntry): string {
-  const time = formatClock(entry.createdAt);
+function formatLogMeta(
+  entry: AgmsgEntry,
+  language: Language,
+  t: Translate,
+): string {
+  const time = formatClock(
+    entry.createdAt,
+    language === "ja" ? "ja-JP" : "en-US",
+  );
   if (isControlMessage(entry.body)) {
-    return `${time} · System`;
+    return `${time} · ${t("metaSystem")}`;
   }
   return `${time} · ${entry.fromAgent} -> ${entry.toAgent}`;
 }
 
-function formatLogHeading(logSource: LogSource, selectedTeam: string): string {
+function formatLogHeading(
+  logSource: LogSource,
+  selectedTeam: string,
+  t: Translate,
+): string {
   if (logSource === "agmsg") return selectedTeam;
-  if (logSource === "import") return "imported file";
-  return "agmsg sample";
+  if (logSource === "import") return t("logHeadingImport");
+  return t("logHeadingSample");
 }
 
 function formatSourceStatus({
@@ -663,41 +748,44 @@ function formatSourceStatus({
   loading,
   logSource,
   selectedTeam,
+  t,
 }: {
   entriesCount: number;
   importedFileName: string;
   loading: boolean;
   logSource: LogSource;
   selectedTeam: string;
+  t: Translate;
 }): string {
-  if (loading) return "Loading log...";
+  if (loading) return t("sourceLoading");
   if (logSource === "agmsg") {
-    return `Live agmsg: ${selectedTeam} (${entriesCount} entries)`;
+    return t("sourceLiveStatus", { team: selectedTeam, count: entriesCount });
   }
   if (logSource === "import") {
-    const fileLabel = importedFileName || "imported file";
-    return `Imported file: ${fileLabel} (${entriesCount} entries)`;
+    const fileLabel = importedFileName || t("importedFileFallback");
+    return t("sourceImportedStatus", {
+      name: fileLabel,
+      count: entriesCount,
+    });
   }
-  return `Sample log (${entriesCount} entries)`;
+  return t("sourceSampleStatus", { count: entriesCount });
 }
 
-function parseImportedLog(value: string): RawAgmsgRecord[] {
+function parseImportedLog(value: string, t: Translate): RawAgmsgRecord[] {
   let payload: unknown;
   try {
     payload = JSON.parse(value);
   } catch {
-    throw new Error("Import failed. The selected file is not valid JSON.");
+    throw new Error(t("errorImportInvalidJson"));
   }
 
   if (!Array.isArray(payload)) {
-    throw new Error("Import failed. The JSON file must contain an array.");
+    throw new Error(t("errorImportNotArray"));
   }
 
   for (const [index, record] of payload.entries()) {
     if (!isRawAgmsgRecord(record)) {
-      throw new Error(
-        `Import failed. Record ${index + 1} must include id, team, from_agent, to_agent, body, created_at, and optional read_at.`,
-      );
+      throw new Error(t("errorImportInvalidRecord", { index: index + 1 }));
     }
   }
 
@@ -729,10 +817,22 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-async function fetchAgmsgTeams(): Promise<AgmsgTeamSummary[]> {
+function localizeFallbackReason(
+  reason: string | undefined,
+  language: Language,
+): string {
+  if (!reason || reason === "Local agmsg data is unavailable.") {
+    return translateString(language, "errorLocalUnavailable");
+  }
+  return reason;
+}
+
+async function fetchAgmsgTeams(
+  language: Language,
+): Promise<AgmsgTeamSummary[]> {
   const response = await fetch("/api/agmsg/teams");
   if (!response.ok) {
-    throw new Error("Local agmsg API is not available.");
+    throw new Error(translateString(language, "errorLocalApi"));
   }
 
   const payload = (await response.json()) as AgmsgTeamsResponse;
@@ -745,12 +845,15 @@ async function fetchAgmsgTeams(): Promise<AgmsgTeamSummary[]> {
 
 async function fetchAgmsgHistory(
   teamName: string,
+  language: Language,
 ): Promise<AgmsgHistoryResult> {
   const response = await fetch(
     `/api/agmsg/history?team=${encodeURIComponent(teamName)}&limit=80`,
   );
   if (!response.ok) {
-    throw new Error(`Failed to load agmsg history for ${teamName}.`);
+    throw new Error(
+      translateString(language, "errorLoadAgmsgHistory", { team: teamName }),
+    );
   }
 
   const payload = (await response.json()) as AgmsgHistoryResponse;
@@ -765,10 +868,10 @@ async function fetchAgmsgHistory(
   };
 }
 
-async function fetchSampleLog(): Promise<RawAgmsgRecord[]> {
-  const response = await fetch(SAMPLE_LOG_URL);
+async function fetchSampleLog(language: Language): Promise<RawAgmsgRecord[]> {
+  const response = await fetch(SAMPLE_LOG_URLS[language]);
   if (!response.ok) {
-    throw new Error("Failed to load sample agmsg log");
+    throw new Error(translateString(language, "errorLoadSample"));
   }
   return (await response.json()) as RawAgmsgRecord[];
 }

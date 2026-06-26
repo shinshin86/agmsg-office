@@ -1,0 +1,83 @@
+[
+  {
+    "id": 1,
+    "team": "product-studio",
+    "from_agent": "lead",
+    "to_agent": "planner",
+    "body": "再生画面の仕上げ作業を、短い計画にまとめてください。",
+    "created_at": "2026-06-24T00:00:00Z",
+    "read_at": "2026-06-24T00:00:06Z"
+  },
+  {
+    "id": 2,
+    "team": "product-studio",
+    "from_agent": "planner",
+    "to_agent": "design",
+    "body": "キャスト表示、動きのタイミング、ソース切り替え確認の3つに分けました。",
+    "created_at": "2026-06-24T00:03:00Z",
+    "read_at": "2026-06-24T00:03:12Z"
+  },
+  {
+    "id": 3,
+    "team": "product-studio",
+    "from_agent": "design",
+    "to_agent": "dev",
+    "body": "新しいアクターは、少し浮き上がってフェードインするくらいなら落ち着いたステージにできます。",
+    "created_at": "2026-06-24T00:06:00Z",
+    "read_at": null
+  },
+  {
+    "id": 4,
+    "team": "product-studio",
+    "from_agent": "dev",
+    "to_agent": "reviewer",
+    "body": "静かなチームでステージ全体が埋まらないよう、キャストをログデータに連動させました。",
+    "created_at": "2026-06-24T00:10:00Z",
+    "read_at": "2026-06-24T00:10:18Z"
+  },
+  {
+    "id": 5,
+    "team": "product-studio",
+    "from_agent": "reviewer",
+    "to_agent": "qa",
+    "body": "再生中に各エージェントのキャラクター割り当てが安定しているか確認してください。",
+    "created_at": "2026-06-24T00:14:00Z",
+    "read_at": null
+  },
+  {
+    "id": 6,
+    "team": "product-studio",
+    "from_agent": "qa",
+    "to_agent": "ops",
+    "body": "割り当ては安定しています。長い文でもキャプションの高さが保たれることも確認しました。",
+    "created_at": "2026-06-24T00:18:00Z",
+    "read_at": "2026-06-24T00:18:22Z"
+  },
+  {
+    "id": 7,
+    "team": "product-studio",
+    "from_agent": "ops",
+    "to_agent": "docs",
+    "body": "ctrl:despawn",
+    "created_at": "2026-06-24T00:20:00Z",
+    "read_at": null
+  },
+  {
+    "id": 8,
+    "team": "product-studio",
+    "from_agent": "docs",
+    "to_agent": "lead",
+    "body": "登場演出について短くメモし、運用チェックリストも簡潔にしておきました。",
+    "created_at": "2026-06-24T00:23:00Z",
+    "read_at": "2026-06-24T00:23:30Z"
+  },
+  {
+    "id": 9,
+    "team": "product-studio",
+    "from_agent": "lead",
+    "to_agent": "planner",
+    "body": "ありがとうございます。サンプルは全キャストと1件のシステムイベントを確認できる内容になりました。",
+    "created_at": "2026-06-24T00:27:00Z",
+    "read_at": null
+  }
+]
