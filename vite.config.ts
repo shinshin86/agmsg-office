@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,10 @@ const SAMPLE_LOG_PATH = join(PROJECT_ROOT, "public/sample/agmsg-sample.json");
 const AGMSG_SCRIPT_DIR = join(
   process.env.HOME ?? "",
   ".agents/skills/agmsg/scripts",
+);
+const AGMSG_TEAMS_DIR = join(
+  process.env.HOME ?? "",
+  ".agents/skills/agmsg/teams",
 );
 const SCRIPT_TIMEOUT_MS = 5000;
 const FALLBACK_REASON = "Local agmsg data is unavailable.";
@@ -47,14 +51,7 @@ function agmsgDevApiPlugin(): Plugin {
 
 async function handleTeamsRequest(res: ServerResponse) {
   try {
-    const identityOutput = await runAgmsgScript("whoami.sh", [
-      PROJECT_ROOT,
-      "codex",
-    ]);
-    const identity = parseIdentity(identityOutput);
-    const teamNames = [
-      ...new Set([...identity.teams, ...identity.availableTeams]),
-    ].filter(Boolean);
+    const teamNames = await readAgmsgTeamNames();
     const teams = await Promise.all(
       teamNames.map(async (teamName) => ({
         name: teamName,
@@ -64,12 +61,19 @@ async function handleTeamsRequest(res: ServerResponse) {
 
     sendJson(res, {
       source: "agmsg",
-      identity,
       teams,
     });
   } catch {
     sendFallbackTeams(res);
   }
+}
+
+async function readAgmsgTeamNames(): Promise<string[]> {
+  const entries = await readdir(AGMSG_TEAMS_DIR, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort((left, right) => left.localeCompare(right));
 }
 
 async function handleHistoryRequest(req: IncomingMessage, res: ServerResponse) {
@@ -116,36 +120,6 @@ function runAgmsgScript(scriptName: string, args: string[]): Promise<string> {
   });
 }
 
-function parseIdentity(output: string) {
-  const fields = parseKeyValueLine(output.trim());
-  return {
-    agent: fields.agent,
-    agents: splitCsv(fields.agents),
-    teams: splitCsv(fields.teams),
-    availableTeams: splitCsv(fields.available_teams).filter(
-      (team) => team !== "none",
-    ),
-    status: fields.suggest
-      ? "suggest"
-      : fields.not_joined
-        ? "not_joined"
-        : fields.multiple
-          ? "multiple"
-          : "ready",
-    type: fields.type,
-  };
-}
-
-function parseKeyValueLine(line: string): Record<string, string> {
-  const fields: Record<string, string> = {};
-  for (const pair of line.split(/\s+/)) {
-    const separatorIndex = pair.indexOf("=");
-    if (separatorIndex === -1) continue;
-    fields[pair.slice(0, separatorIndex)] = pair.slice(separatorIndex + 1);
-  }
-  return fields;
-}
-
 function parseTeamAgents(output: string): string[] {
   return output
     .split("\n")
@@ -186,14 +160,6 @@ function normalizeLimit(value: string | null): number {
   const limit = Number(value);
   if (!Number.isFinite(limit)) return 80;
   return Math.min(Math.max(Math.floor(limit), 1), 200);
-}
-
-function splitCsv(value?: string): string[] {
-  if (!value) return [];
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
 }
 
 function sendJson(res: ServerResponse, payload: unknown, statusCode = 200) {
