@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "team": "product-studio",
+    "from_agent": "lead",
+    "to_agent": "planner",
+    "body": "Please outline the first pass for the dashboard polish work.",
+    "created_at": "2026-06-24T00:00:00Z",
+    "read_at": "2026-06-24T00:00:04Z"
+  },
+  {
+    "id": 2,
+    "team": "product-studio",
+    "from_agent": "planner",
+    "to_agent": "dev",
+    "body": "I split the work into layout cleanup, empty states, and a compact review checklist.",
+    "created_at": "2026-06-24T00:03:00Z",
+    "read_at": "2026-06-24T00:03:08Z"
+  },
+  {
+    "id": 3,
+    "team": "product-studio",
+    "from_agent": "dev",
+    "to_agent": "reviewer",
+    "body": "The main layout is wired up. I kept the data model unchanged and added a small loading state.",
+    "created_at": "2026-06-24T00:08:00Z",
+    "read_at": "2026-06-24T00:08:12Z"
+  },
+  {
+    "id": 4,
+    "team": "product-studio",
+    "from_agent": "reviewer",
+    "to_agent": "qa",
+    "body": "Please verify the keyboard path through the filter controls and the detail panel.",
+    "created_at": "2026-06-24T00:12:00Z",
+    "read_at": null
+  },
+  {
+    "id": 5,
+    "team": "product-studio",
+    "from_agent": "qa",
+    "to_agent": "docs",
+    "body": "The keyboard path works. I found one unclear empty-state label that should be documented.",
+    "created_at": "2026-06-24T00:16:00Z",
+    "read_at": "2026-06-24T00:16:30Z"
+  },
+  {
+    "id": 6,
+    "team": "product-studio",
+    "from_agent": "ops",
+    "to_agent": "lead",
+    "body": "ctrl:despawn",
+    "created_at": "2026-06-24T00:18:00Z",
+    "read_at": null
+  },
+  {
+    "id": 7,
+    "team": "product-studio",
+    "from_agent": "docs",
+    "to_agent": "ops",
+    "body": "I added a short note for the empty state and left the release checklist ready for handoff.",
+    "created_at": "2026-06-24T00:22:00Z",
+    "read_at": null
+  }
+]

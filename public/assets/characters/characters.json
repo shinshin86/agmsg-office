@@ -1,0 +1,42 @@
+[
+  {
+    "id": "miko",
+    "displayName": "Miko",
+    "role": "Guide / host",
+    "description": "A cheerful host character for the stage.",
+    "portraitPath": "miko/portrait.png",
+    "spritesheetPath": "miko/spritesheet.webp"
+  },
+  {
+    "id": "mai",
+    "displayName": "Mai",
+    "role": "Stage actor",
+    "description": "A gentle stage actor in a casual green outfit.",
+    "portraitPath": "mai/portrait.png",
+    "spritesheetPath": "mai/spritesheet.webp"
+  },
+  {
+    "id": "haya",
+    "displayName": "Haya",
+    "role": "Stage actor",
+    "description": "A lively stage actor in a casual dark outfit with cyan accents.",
+    "portraitPath": "haya/portrait.png",
+    "spritesheetPath": "haya/spritesheet.webp"
+  },
+  {
+    "id": "suzu",
+    "displayName": "Suzu",
+    "role": "Stage actor",
+    "description": "A calm stage actor in a casual purple-and-white outfit.",
+    "portraitPath": "suzu/portrait.png",
+    "spritesheetPath": "suzu/spritesheet.webp"
+  },
+  {
+    "id": "kii",
+    "displayName": "Kii",
+    "role": "Stage actor",
+    "description": "A friendly stage actor in a casual yellow-and-gray outfit.",
+    "portraitPath": "kii/portrait.png",
+    "spritesheetPath": "kii/spritesheet.webp"
+  }
+]

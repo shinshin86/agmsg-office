@@ -1,0 +1,19 @@
+{
+  "characters": "characters/characters.json",
+  "backgrounds": [
+    {
+      "id": "office-main",
+      "displayName": "Agent Office",
+      "description": "A dark pixel-art virtual office background for agmsg replay views.",
+      "path": "backgrounds/office-main.png"
+    }
+  ],
+  "props": [
+    {
+      "id": "desk-island",
+      "displayName": "Desk Island",
+      "description": "A transparent pixel-art desk cluster for placing agent characters.",
+      "path": "props/desk-island.png"
+    }
+  ]
+}
