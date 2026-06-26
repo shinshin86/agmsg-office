@@ -423,6 +423,44 @@ select {
   cursor: pointer;
 }
 
+.advanced-panel {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 4px;
+}
+
+.advanced-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 0;
+  color: #64748b;
+  background: transparent;
+  font-size: 13px;
+}
+
+.advanced-toggle:hover:not(:disabled) {
+  border-color: transparent;
+  background: transparent;
+  color: #334155;
+}
+
+.advanced-toggle span:last-child {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.advanced-content {
+  display: grid;
+  gap: 10px;
+}
+
 .meta-text {
   margin: 0;
   color: #64748b;
