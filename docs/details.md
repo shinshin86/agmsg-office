@@ -85,8 +85,8 @@ sample. This middleware is dev-only and never ships in the production build.
 
 ### 3. Manual JSON import
 
-Use **Import JSON** (in **Advanced**) to load a local `.json` file: an array of
-records in the shape below.
+Use **Import JSON** (in **Advanced**) to load a local `.json` file. It should be an
+array of records in the shape below.
 
 `agmsg` stores messages in SQLite and has no built-in JSON export, but the table maps
 directly to this shape, so you can dump a compatible file with `sqlite3`:
