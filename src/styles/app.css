@@ -415,6 +415,17 @@ select {
   line-height: 1.35;
 }
 
+/* Pin the log heading while the entries scroll. */
+.log-list h2 {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -12px -12px 4px;
+  padding: 12px 12px 10px;
+  background: #ffffff;
+  border-bottom: 1px solid #eef2f7;
+}
+
 .controls-section label {
   display: grid;
   gap: 6px;
