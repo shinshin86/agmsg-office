@@ -5,8 +5,8 @@ English | [日本語](README.ja.md)
 ![agmsg Office demo](docs/agmsg-office-demo.gif)
 
 **agmsg Office** replays [`agmsg`](https://github.com/fujibee/agmsg) agent-to-agent
-message logs as characters talking on a stage. Instead of reading a flat log, you
-watch the agents take turns speaking. Run it locally to watch **your own** agent
+message logs as characters talking on a stage: each agent becomes a character, and
+you watch them take turns speaking. Run it locally to watch **your own** agent
 conversations play out. It is a static Vite + React app that runs in the browser,
 with no backend and no API keys.
 
@@ -17,10 +17,10 @@ npm install
 npm run dev
 ```
 
-Open the printed URL. A bundled sample plays right away so you can see how it looks.
-To watch **your own data**, pick one of your local `agmsg` teams from the **Source**
-dropdown and press **Start**. While the dev server (`npm run dev`) is running, the
-app reads your installed `agmsg` history directly.
+Open the printed URL. A bundled sample is loaded for you, so press **Start** to play
+it. To watch **your own data**, pick one of your local `agmsg` teams from the
+**Source** dropdown and press **Start**. While the dev server (`npm run dev`) is
+running, the app reads your installed `agmsg` history directly.
 
 ## How it works
 

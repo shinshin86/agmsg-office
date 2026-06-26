@@ -135,6 +135,7 @@ teams have no hard size limit, so this keeps any team viewable.
 
 ```text
 src/
+  main.tsx                    # entry point
   App.tsx                     # app shell: stage, controls, log panel, replay engine
   components/CharacterActor.tsx  # character sprite, motion, and speech bubble
   lib/agmsg.ts                # log normalization + agent-to-character mapping + formatting
@@ -165,8 +166,9 @@ follow an 8×9 atlas:
 | 7 | running |
 | 8 | review |
 
-Each spritesheet is generated from a single transparent full-body portrait
-(`portrait.png`). Regenerate them with:
+Each actor spritesheet is generated from a single transparent full-body portrait
+(`portrait.png`). Regenerate the eight actor spritesheets with the command below (the
+host/Boss spritesheet is supplied separately):
 
 ```bash
 npm run assets:generate-sprites
