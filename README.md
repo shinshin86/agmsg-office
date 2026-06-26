@@ -16,9 +16,6 @@ It runs entirely in the browser — no backend and no API keys. The whole
 thing is a static Vite + React app; the only server-side piece is an optional
 dev-only helper that can read your local `agmsg` history while you run it.
 
-> Why? Multi-agent runs produce long, hard-to-skim message logs. agmsg Office is a
-> lightweight, fun way to *see* who said what to whom, in order.
-
 ---
 
 ## Features
