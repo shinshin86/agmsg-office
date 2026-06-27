@@ -1,0 +1,4 @@
+interface:
+  display_name: "AGMSG Character Sprites"
+  short_description: "Generate agmsg Office character sprite sheets"
+  default_prompt: "Use $agmsg-character-sprites to generate an agmsg Office character spritesheet from a portrait."
