@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CharacterState, StageCharacter } from "../types";
+import type { CharacterId, CharacterState, StageCharacter } from "../types";
 
 type PetAction =
   | "idle"
@@ -12,7 +12,10 @@ type PetAction =
   | "running"
   | "review";
 
+type AmbientRestAction = "idle" | "waving" | "waiting" | "review";
+
 interface CharacterActorProps {
+  ambientMotion: boolean;
   character: StageCharacter;
 }
 
@@ -32,6 +35,8 @@ interface MotionState {
   targetY: number;
   pausedUntil: number;
   walking: boolean;
+  restAction: AmbientRestAction;
+  restActionUntil: number;
 }
 
 const ASSET_BASE = "/assets/";
@@ -40,6 +45,24 @@ const CELL_HEIGHT = 208;
 const ATLAS_COLUMNS = 8;
 const ATLAS_ROWS = 9;
 const MAX_BUBBLE_CHARS = 92;
+// Characters with a real multi-pose spritesheet get ambient motion.
+// Every character now has one; drop an id here if its sheet regresses.
+const RICH_MOTION_IDS: ReadonlySet<CharacterId> = new Set([
+  "miko",
+  "mai",
+  "haya",
+  "suzu",
+  "kii",
+  "rin",
+  "nao",
+  "mio",
+  "sora",
+]);
+const AMBIENT_REST_ACTIONS: readonly AmbientRestAction[] = [
+  "waving",
+  "review",
+  "waiting",
+];
 
 const SPRITE_ROWS: Record<PetAction, SpriteRow> = {
   idle: { row: 0, frames: 6, frameMs: 320 },
@@ -86,8 +109,28 @@ function useSpriteFrame(action: PetAction) {
   return frame;
 }
 
-function useActorMotion(character: StageCharacter, action: PetAction) {
+function getMotionStagger(character: StageCharacter) {
+  const idOffset = [...character.id].reduce(
+    (total, value) => total + value.charCodeAt(0),
+    0,
+  );
+  return (idOffset % 900) + character.entranceDelayMs * 0.45;
+}
+
+function getRandomAmbientRestAction(): AmbientRestAction {
+  if (Math.random() > 0.38) return "idle";
+  return AMBIENT_REST_ACTIONS[
+    Math.floor(Math.random() * AMBIENT_REST_ACTIONS.length)
+  ];
+}
+
+function useActorMotion(
+  character: StageCharacter,
+  action: PetAction,
+  ambientMotionEnabled: boolean,
+) {
   const { x: homeX, y: homeY } = character.position;
+  const initialStagger = getMotionStagger(character);
   const [motion, setMotion] = useState<MotionState>({
     x: homeX,
     y: homeY,
@@ -98,13 +141,21 @@ function useActorMotion(character: StageCharacter, action: PetAction) {
     targetY: homeY,
     pausedUntil: 0,
     walking: false,
+    restAction: "idle",
+    restActionUntil: 0,
   });
   const actionRef = useRef(action);
+  const ambientMotionRef = useRef(ambientMotionEnabled);
   const homeRef = useRef(character.position);
+  const staggerRef = useRef(initialStagger);
 
   useEffect(() => {
     actionRef.current = action;
   }, [action]);
+
+  useEffect(() => {
+    ambientMotionRef.current = ambientMotionEnabled;
+  }, [ambientMotionEnabled]);
 
   useEffect(() => {
     homeRef.current = { x: homeX, y: homeY };
@@ -120,8 +171,11 @@ function useActorMotion(character: StageCharacter, action: PetAction) {
 
       setMotion((current) => {
         const currentAction = actionRef.current;
+        const ambientMoving =
+          ambientMotionRef.current && currentAction === "idle";
         const home = homeRef.current;
         const moving =
+          ambientMoving ||
           currentAction === "running" ||
           currentAction === "running-left" ||
           currentAction === "running-right";
@@ -135,6 +189,8 @@ function useActorMotion(character: StageCharacter, action: PetAction) {
         let targetY = current.targetY;
         let pausedUntil = current.pausedUntil;
         let walking = current.walking;
+        let restAction = current.restAction;
+        let restActionUntil = current.restActionUntil;
         const minX = Math.max(5, home.x - 12);
         const maxX = Math.min(94, home.x + 12);
         const minY = Math.max(18, home.y - 1.2);
@@ -148,18 +204,37 @@ function useActorMotion(character: StageCharacter, action: PetAction) {
           if (distance < 0.32) {
             walking = false;
             if (pausedUntil === 0) {
-              pausedUntil = now + 3200 + Math.random() * 2600;
+              pausedUntil =
+                now +
+                3200 +
+                Math.random() * 2600 +
+                (ambientMoving ? staggerRef.current : 0);
+              if (ambientMoving) {
+                restAction = getRandomAmbientRestAction();
+                restActionUntil =
+                  restAction === "idle" ? 0 : now + 1100 + Math.random() * 1400;
+              }
+            }
+            if (restActionUntil > 0 && now > restActionUntil) {
+              restAction = "idle";
+              restActionUntil = 0;
             }
             if (now > pausedUntil) {
-              const nextX = home.x + (Math.random() * 2 - 1) * 5.5;
+              const nextX = ambientMoving
+                ? minX + Math.random() * (maxX - minX)
+                : home.x + (Math.random() * 2 - 1) * 5.5;
               targetX = Math.min(Math.max(nextX, minX), maxX);
               targetY = home.y;
               direction = targetX >= x ? 1 : -1;
               pausedUntil = 0;
               walking = true;
+              restAction = "idle";
+              restActionUntil = 0;
             }
           } else {
             walking = true;
+            restAction = "idle";
+            restActionUntil = 0;
             direction = distanceX >= 0 ? 1 : -1;
             vx = (distanceX / distance) * speed;
             vy = (distanceY / distance) * speed;
@@ -173,6 +248,8 @@ function useActorMotion(character: StageCharacter, action: PetAction) {
           targetY = home.y;
           vx = (home.x - x) * 0.03;
           vy = (home.y - y) * 0.03;
+          restAction = "idle";
+          restActionUntil = 0;
           x += vx * elapsed;
           y += vy * elapsed;
         }
@@ -193,6 +270,8 @@ function useActorMotion(character: StageCharacter, action: PetAction) {
           targetY,
           pausedUntil,
           walking,
+          restAction,
+          restActionUntil,
         };
       });
 
@@ -228,11 +307,23 @@ function truncateText(value: string, maxLength: number): string {
   return `${value.slice(0, maxLength)}...`;
 }
 
-export function CharacterActor({ character }: CharacterActorProps) {
+export function CharacterActor({
+  ambientMotion,
+  character,
+}: CharacterActorProps) {
   const baseAction = actionForState(character.state, character.isActiveSpeaker);
-  const motion = useActorMotion(character, baseAction);
+  const ambientMotionEnabled =
+    ambientMotion &&
+    character.state === "idle" &&
+    RICH_MOTION_IDS.has(character.id);
+  const motion = useActorMotion(character, baseAction, ambientMotionEnabled);
+  const displayAction = ambientMotionEnabled
+    ? motion.walking
+      ? "running"
+      : motion.restAction
+    : baseAction;
   const action = getMovementAction(
-    baseAction,
+    displayAction,
     motion.direction,
     motion.walking,
   );
