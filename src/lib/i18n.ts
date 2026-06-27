@@ -4,6 +4,7 @@ type Params = Record<string, number | string>;
 
 export const LANGUAGE_STORAGE_KEY = "agmsg-office.lang";
 export const SHOW_DATE_STORAGE_KEY = "agmsg-office.show-date";
+export const AMBIENT_MOTION_STORAGE_KEY = "agmsg-office.ambient-motion";
 
 export const STRINGS = {
   en: {
@@ -11,6 +12,7 @@ export const STRINGS = {
     agentsPrefix: "Agents:",
     captionCurrentLine: "Current line",
     captionPlaceholder: "Replay text will appear here.",
+    characterMotion: "Characters move around",
     controlDespawn: "{agent} left the session.",
     controlGeneric: "A system event came through: {command}.",
     errorImportInvalidJson:
@@ -65,6 +67,7 @@ export const STRINGS = {
     agentsPrefix: "エージェント:",
     captionCurrentLine: "現在の行",
     captionPlaceholder: "再生テキストがここに表示されます。",
+    characterMotion: "キャラクターを動かす",
     controlDespawn: "{agent} がセッションから退出しました。",
     controlGeneric: "システムイベントを受信しました: {command}。",
     errorImportInvalidJson:
@@ -155,6 +158,25 @@ export function detectShowDate(): boolean {
 export function saveShowDate(showDate: boolean) {
   try {
     localStorage.setItem(SHOW_DATE_STORAGE_KEY, String(showDate));
+  } catch {
+    // Ignore storage failures; the in-memory choice still applies.
+  }
+}
+
+export function detectAmbientMotion(): boolean {
+  try {
+    const value = localStorage.getItem(AMBIENT_MOTION_STORAGE_KEY);
+    if (value === "false") return false;
+    if (value === "true") return true;
+  } catch {
+    return true;
+  }
+  return true;
+}
+
+export function saveAmbientMotion(ambientMotion: boolean) {
+  try {
+    localStorage.setItem(AMBIENT_MOTION_STORAGE_KEY, String(ambientMotion));
   } catch {
     // Ignore storage failures; the in-memory choice still applies.
   }

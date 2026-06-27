@@ -18,8 +18,10 @@ import {
 import {
   type I18nKey,
   type Language,
+  detectAmbientMotion,
   detectLanguage,
   detectShowDate,
+  saveAmbientMotion,
   saveLanguage,
   saveShowDate,
   t as translateString,
@@ -88,6 +90,9 @@ function App() {
     detectLanguage(),
   );
   const [showDate, setShowDate] = useState(() => detectShowDate());
+  const [ambientMotion, setAmbientMotion] = useState(() =>
+    detectAmbientMotion(),
+  );
   const [theaterMode, setTheaterMode] = useState(false);
   const [assetsManifest, setAssetsManifest] = useState<AssetsManifest | null>(
     null,
@@ -365,6 +370,14 @@ function App() {
     });
   }, []);
 
+  const toggleAmbientMotion = useCallback(() => {
+    setAmbientMotion((value) => {
+      const nextValue = !value;
+      saveAmbientMotion(nextValue);
+      return nextValue;
+    });
+  }, []);
+
   const startReplay = useCallback(async () => {
     if (entries.length === 0) return;
 
@@ -462,6 +475,7 @@ function App() {
             )}
             {characters.map((character) => (
               <CharacterActor
+                ambientMotion={ambientMotion}
                 character={character}
                 key={`${castKey}-${character.id}`}
               />
@@ -599,6 +613,14 @@ function App() {
                     onChange={toggleShowDate}
                   />
                   <span>{t("showDate")}</span>
+                </label>
+                <label className="toggle-row">
+                  <input
+                    checked={ambientMotion}
+                    type="checkbox"
+                    onChange={toggleAmbientMotion}
+                  />
+                  <span>{t("characterMotion")}</span>
                 </label>
                 <label className="file-input">
                   {t("importJson")}

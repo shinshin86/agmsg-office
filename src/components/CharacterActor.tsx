@@ -15,6 +15,7 @@ type PetAction =
 type AmbientRestAction = "idle" | "waving" | "waiting" | "review";
 
 interface CharacterActorProps {
+  ambientMotion: boolean;
   character: StageCharacter;
 }
 
@@ -295,10 +296,15 @@ function truncateText(value: string, maxLength: number): string {
   return `${value.slice(0, maxLength)}...`;
 }
 
-export function CharacterActor({ character }: CharacterActorProps) {
+export function CharacterActor({
+  ambientMotion,
+  character,
+}: CharacterActorProps) {
   const baseAction = actionForState(character.state, character.isActiveSpeaker);
   const ambientMotionEnabled =
-    character.state === "idle" && RICH_MOTION_IDS.has(character.id);
+    ambientMotion &&
+    character.state === "idle" &&
+    RICH_MOTION_IDS.has(character.id);
   const motion = useActorMotion(character, baseAction, ambientMotionEnabled);
   const displayAction = ambientMotionEnabled
     ? motion.walking
