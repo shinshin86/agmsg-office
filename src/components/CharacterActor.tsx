@@ -45,8 +45,19 @@ const CELL_HEIGHT = 208;
 const ATLAS_COLUMNS = 8;
 const ATLAS_ROWS = 9;
 const MAX_BUBBLE_CHARS = 92;
-// Phase 2: add character ids here as real multi-pose spritesheets land.
-const RICH_MOTION_IDS: ReadonlySet<CharacterId> = new Set(["miko"]);
+// Characters with a real multi-pose spritesheet get ambient motion.
+// Every character now has one; drop an id here if its sheet regresses.
+const RICH_MOTION_IDS: ReadonlySet<CharacterId> = new Set([
+  "miko",
+  "mai",
+  "haya",
+  "suzu",
+  "kii",
+  "rin",
+  "nao",
+  "mio",
+  "sora",
+]);
 const AMBIENT_REST_ACTIONS: readonly AmbientRestAction[] = [
   "waving",
   "review",
