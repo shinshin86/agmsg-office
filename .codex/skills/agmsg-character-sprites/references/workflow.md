@@ -102,15 +102,18 @@ uv run --with pillow python "$SKILL_DIR/scripts/render_animation_previews.py" \
 
 If extraction creates baseline or scale popping but source strips are stable, rerun extraction with `--method stable-slots` and inspect with `--allow-stable-slots`.
 
-## Install Result
+## Use Result in agmsg Office
 
-Copy the final validated WebP into:
+The final validated WebP is the upload artifact for agmsg Office. Do not ask users to edit `characters.json` manually.
 
-```bash
-cp "$RUN_DIR/final/spritesheet.webp" "public/assets/characters/<id>/spritesheet.webp"
-```
+1. Keep the accepted file at `$RUN_DIR/final/spritesheet.webp`.
+2. Start agmsg Office with `npm run dev`.
+3. Open the Casting panel.
+4. Choose a slot, click "Replace character", and upload `$RUN_DIR/final/spritesheet.webp`.
+5. Optionally upload a `portrait.png`.
+6. The app's dev server writes `public/assets/characters/custom/` and updates the custom manifest.
 
-Then run:
+After upload, run the project checks:
 
 ```bash
 uv run --with pillow python .codex/skills/agmsg-character-sprites/scripts/validate-character-spritesheets.py public/assets/characters

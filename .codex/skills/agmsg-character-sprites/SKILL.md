@@ -41,6 +41,16 @@ Read `references/animation-contract.md` before changing layout assumptions. Read
 
 Never generate the final 1536x1872 atlas directly with Image Gen. Generate row strips, then let deterministic scripts perform extraction, transparency cleanup, composition, and validation.
 
+## Use in agmsg Office
+
+For user-created characters, the validated `spritesheet.webp` is intended to be uploaded through the app rather than installed by editing JSON manually:
+
+1. Finish QA and validation for `RUN_DIR/final/spritesheet.webp`.
+2. Start agmsg Office with `npm run dev`.
+3. Open the Casting panel, choose a slot, and select "Replace character".
+4. Upload the generated `spritesheet.webp`; optionally upload `portrait.png`.
+5. The dev server writes `public/assets/characters/custom/` and updates the custom manifest automatically.
+
 ## Generation Rules
 
 - Attach or visibly inspect the character portrait and canonical base before row generation.
