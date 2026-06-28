@@ -135,6 +135,7 @@ export function CharacterUploadModal({
                 </button>
               </div>
             ))}
+            {error && <p className="error-text">{error}</p>}
           </div>
         ) : (
           <form

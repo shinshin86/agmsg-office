@@ -484,9 +484,12 @@ function App() {
           removeIds: [characterId],
         }),
       );
+      updateCharacterConfig((currentConfig) =>
+        removeCharacterConfigReferences(currentConfig, characterId),
+      );
       void refreshCharacterAssets(true, { removeIds: [characterId] });
     },
-    [refreshCharacterAssets],
+    [refreshCharacterAssets, updateCharacterConfig],
   );
 
   return (
@@ -869,6 +872,23 @@ function reconcileCharacterAssets(
   }
 
   return [...characterById.values()];
+}
+
+function removeCharacterConfigReferences(
+  config: CharacterConfig,
+  characterId: CharacterRef,
+): CharacterConfig {
+  const casting = { ...config.casting };
+  const renames = { ...config.renames };
+
+  for (const [slotId, configuredCharacterId] of Object.entries(casting)) {
+    if (configuredCharacterId === characterId) {
+      delete casting[slotId as SlotId];
+    }
+  }
+  delete renames[characterId];
+
+  return { casting, renames };
 }
 
 function formatCaption(entry: AgmsgEntry, t: Translate): string {

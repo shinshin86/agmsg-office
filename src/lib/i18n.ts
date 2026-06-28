@@ -14,7 +14,6 @@ export const STRINGS = {
     captionPlaceholder: "Replay text will appear here.",
     casting: "Casting",
     castingAvatar: "Avatar",
-    castingCharacter: "Character",
     castingConfigJson: "Current config JSON",
     castingDevOnlyNotice:
       "Character upload is available only when agmsg Office is running with npm run dev. Existing custom characters still appear here.",
@@ -102,7 +101,6 @@ export const STRINGS = {
     captionPlaceholder: "再生テキストがここに表示されます。",
     casting: "配役",
     castingAvatar: "アバター",
-    castingCharacter: "キャラクター",
     castingConfigJson: "現在の設定JSON",
     castingDevOnlyNotice:
       "キャラのアップロードは npm run dev で agmsg Office を起動しているときだけ使えます。登録済みのカスタムキャラ表示は利用できます。",

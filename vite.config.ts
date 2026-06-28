@@ -9,7 +9,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -315,6 +315,9 @@ function validateWebpUpload(
   }
 
   const size = readWebpSize(file.buffer);
+  if (requireAtlasSize && !size) {
+    throw createHttpError("Unable to read spritesheet dimensions.", 400);
+  }
   if (
     requireAtlasSize &&
     size &&
@@ -489,7 +492,7 @@ function slugify(value: string): string {
 
 function resolveInsideCustomRoot(id: string): string {
   const targetPath = resolve(CUSTOM_CHARACTER_ROOT, id);
-  const rootWithSeparator = `${resolve(CUSTOM_CHARACTER_ROOT)}/`;
+  const rootWithSeparator = `${resolve(CUSTOM_CHARACTER_ROOT)}${sep}`;
   if (!targetPath.startsWith(rootWithSeparator)) {
     throw createHttpError("Invalid custom character path.", 400);
   }

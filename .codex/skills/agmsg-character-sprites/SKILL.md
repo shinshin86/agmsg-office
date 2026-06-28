@@ -14,7 +14,7 @@ Use this skill only in Codex App or another Codex environment that can use the b
 - `uv run --with pillow python ...` for Python/Pillow scripts.
 - Local access to this repository's `public/assets/characters` files.
 
-This is a Codex agent skill, not a standalone CLI. If the repo-local skill is not auto-discovered, invoke it by path or copy `.codex/skills/agmsg-character-sprites` into `${CODEX_HOME:-$HOME/.codex}/skills`.
+This is a Codex agent skill, not a standalone CLI. If the repo-local skill is not auto-discovered, invoke it by path. Copying it into `${CODEX_HOME:-$HOME/.codex}/skills` modifies the user's global Codex area, so do that only after the user explicitly confirms the global install location.
 
 Before starting, check that `${CODEX_HOME:-$HOME/.codex}/skills/hatch-pet/SKILL.md` exists. If it is missing, stop and tell the user to install `$hatch-pet` first, for example with `$skill-installer hatch-pet`, then restart Codex so the skill is discovered. Do not continue with ad-hoc replacement scripts; the hatch-pet pipeline is what keeps atlas geometry, transparency, and QA stable.
 
