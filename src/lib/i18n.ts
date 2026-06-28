@@ -183,7 +183,7 @@ export const STRINGS = {
       "エージェントのメッセージをキャラクターステージとして再生します。",
     unknown: "不明",
     uploadNewCharacter: "新規アップロード",
-    portraitUpload: "任意の portrait.png",
+    portraitUpload: "portrait.png をアップロード（任意）",
   },
 } as const;
 

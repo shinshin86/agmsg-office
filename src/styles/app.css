@@ -83,6 +83,29 @@ select {
   padding: 0 8px;
 }
 
+input[type="file"] {
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #1f2937;
+  font: inherit;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+  border-color: #64748b;
+  background: #f8fafc;
+}
+
 .app-shell {
   display: flex;
   flex-direction: column;
@@ -869,6 +892,15 @@ select {
   border-radius: 6px;
   background: #f8fafc;
   cursor: pointer;
+}
+
+/* Inside the dashed drop zone the field provides the frame, so the
+   native file control should not draw its own box on top of it. */
+.drop-zone input[type="file"] {
+  min-height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .sprite-preview {
