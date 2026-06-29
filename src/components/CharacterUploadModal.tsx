@@ -223,7 +223,7 @@ export function CharacterUploadModal({
       }
     } catch (validationError) {
       setSpritesheetFile(undefined);
-      setError(formatValidationError(validationError, t));
+      setError(formatValidationError(validationError));
     }
   }
 
@@ -234,7 +234,7 @@ export function CharacterUploadModal({
       setPortraitFile(file);
     } catch (validationError) {
       setPortraitFile(undefined);
-      setError(formatValidationError(validationError, t));
+      setError(formatValidationError(validationError));
     }
   }
 
@@ -252,7 +252,7 @@ export function CharacterUploadModal({
       });
       await onUploadCharacter(character);
     } catch (saveError) {
-      setError(formatValidationError(saveError, t));
+      setError(formatValidationError(saveError));
     } finally {
       setBusy(false);
     }
@@ -265,16 +265,15 @@ export function CharacterUploadModal({
       await deleteCustomCharacter(character.id);
       await onDeleteCharacter(character.id);
     } catch (deleteError) {
-      setError(formatValidationError(deleteError, t));
+      setError(formatValidationError(deleteError));
     } finally {
       setBusy(false);
     }
   }
 }
 
-function formatValidationError(error: unknown, t: Translate): string {
-  const message = error instanceof Error ? error.message : String(error);
-  return `${message} ${t("spritesheetSkillHint")}`;
+function formatValidationError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function CharacterThumb({ character }: { character: CharacterAsset }) {
