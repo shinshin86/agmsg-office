@@ -6,15 +6,28 @@ import {
   useRef,
   useState,
 } from "react";
+import { CastingPanel } from "./components/CastingPanel";
 import { CharacterActor } from "./components/CharacterActor";
 import {
-  HOST_CHARACTER_ID,
   createAgentCharacterMap,
   formatClock,
   isControlMessage,
   normalizeAgmsgRecords,
-  resolveCharacterId,
+  resolveSlotId,
 } from "./lib/agmsg";
+import {
+  CUSTOM_CHARACTERS_PATH,
+  DEFAULT_CASTING,
+  DEFAULT_SLOT_POSITIONS,
+  SLOT_IDS,
+  createCharacterById,
+  getCharacterDisplayName,
+  getResolvedCharacterId,
+  mergeCharacterAssets,
+  normalizeCharacterAsset,
+  readCharacterConfig,
+  saveCharacterConfig,
+} from "./lib/characters";
 import {
   type I18nKey,
   type Language,
@@ -32,9 +45,11 @@ import type {
   AgmsgTeamSummary,
   AssetsManifest,
   CharacterAsset,
-  CharacterId,
+  CharacterConfig,
+  CharacterRef,
   CharacterState,
   RawAgmsgRecord,
+  SlotId,
   StageCharacter,
 } from "./types";
 import "./styles/app.css";
@@ -43,18 +58,6 @@ const ASSET_BASE = "/assets/";
 const SAMPLE_LOG_URLS: Record<Language, string> = {
   en: "/sample/agmsg-sample.json",
   ja: "/sample/agmsg-sample.ja.json",
-};
-
-const DEFAULT_POSITIONS: Record<CharacterId, StageCharacter["position"]> = {
-  miko: { x: 13, y: 66 },
-  mai: { x: 24, y: 36 },
-  haya: { x: 46, y: 55 },
-  suzu: { x: 78, y: 34 },
-  kii: { x: 70, y: 67 },
-  nao: { x: 60, y: 41 },
-  mio: { x: 35, y: 45 },
-  rin: { x: 42, y: 70 },
-  sora: { x: 60, y: 68 },
 };
 
 const REPLAY_DELAY_BASE_MS = 2600;
@@ -85,6 +88,11 @@ type Translate = (
   params?: Record<string, number | string>,
 ) => string;
 
+interface CharacterAssetReconcileOptions {
+  upsert?: CharacterAsset[];
+  removeIds?: string[];
+}
+
 function App() {
   const [language, setLanguageState] = useState<Language>(() =>
     detectLanguage(),
@@ -98,6 +106,9 @@ function App() {
     null,
   );
   const [characterAssets, setCharacterAssets] = useState<CharacterAsset[]>([]);
+  const [characterConfig, setCharacterConfig] = useState<CharacterConfig>(() =>
+    readCharacterConfig(),
+  );
   const [entries, setEntries] = useState<AgmsgEntry[]>([]);
   const [teams, setTeams] = useState<AgmsgTeamSummary[]>([]);
   const [selectedTeam, setSelectedTeam] = useState("");
@@ -114,6 +125,7 @@ function App() {
   >();
   const [showCaption, setShowCaption] = useState(true);
   const [showAdvancedSource, setShowAdvancedSource] = useState(false);
+  const [showCastingPanel, setShowCastingPanel] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [agmsgError, setAgmsgError] = useState("");
   const [castKey, setCastKey] = useState(0);
@@ -125,7 +137,6 @@ function App() {
       translateString(language, key, params),
     [language],
   );
-
   const agentMap = useMemo<AgentCharacterMap>(
     () => createAgentCharacterMap(entries),
     [entries],
@@ -137,13 +148,13 @@ function App() {
   const activeEntryIsControl = activeEntry
     ? isControlMessage(activeEntry.body)
     : false;
-  const activeCharacterId =
+  const activeSlotId =
     activeEntry && !activeEntryIsControl
-      ? resolveCharacterId(activeEntry.fromAgent, agentMap)
+      ? resolveSlotId(activeEntry.fromAgent, agentMap)
       : undefined;
-  const targetCharacterId =
+  const targetSlotId =
     activeEntry?.toAgent && !activeEntryIsControl
-      ? resolveCharacterId(activeEntry.toAgent, agentMap)
+      ? resolveSlotId(activeEntry.toAgent, agentMap)
       : undefined;
   const hostLine =
     hostAnnouncement ??
@@ -153,7 +164,8 @@ function App() {
       createStageCharacters({
         agentMap,
         characterAssets,
-        activeCharacterId,
+        characterConfig,
+        activeSlotId,
         activeAgentName: activeEntryIsControl
           ? undefined
           : activeEntry?.fromAgent,
@@ -162,21 +174,29 @@ function App() {
         targetAgentName: activeEntryIsControl
           ? undefined
           : activeEntry?.toAgent,
-        targetCharacterId,
+        targetSlotId,
         hostLine,
       }),
     [
       agentMap,
-      activeCharacterId,
+      activeSlotId,
       activeEntry?.fromAgent,
       activeEntry?.body,
       activeEntry?.toAgent,
       activeEntryIsControl,
       characterAssets,
+      characterConfig,
       hostLine,
       playbackStatus,
-      targetCharacterId,
+      targetSlotId,
     ],
+  );
+  const slotStageDisplayNames = useMemo(
+    () =>
+      Object.fromEntries(
+        characters.map((character) => [character.id, character.displayName]),
+      ) as Partial<Record<SlotId, string>>,
+    [characters],
   );
   const officeBackground =
     assetsManifest?.backgrounds.find((item) => item.id === "office-main")
@@ -297,12 +317,14 @@ function App() {
           );
         }
 
-        const nextCharacters =
-          (await characterResponse.json()) as CharacterAsset[];
+        const mergedCharacters = mergeCharacterAssets(
+          (await characterResponse.json()) as CharacterAsset[],
+          await fetchCustomCharacters(),
+        ).map(normalizeCharacterAsset);
 
         if (!active) return;
         setAssetsManifest(nextAssets);
-        setCharacterAssets(nextCharacters);
+        setCharacterAssets(mergedCharacters);
 
         const rawRecords = await fetchSampleLog(initialLanguageRef.current);
         if (!active) return;
@@ -424,6 +446,55 @@ function App() {
     });
   }, [activeEntryId]);
 
+  const updateCharacterConfig = useCallback(
+    (updater: (config: CharacterConfig) => CharacterConfig) => {
+      setCharacterConfig((currentConfig) => {
+        const nextConfig = updater(currentConfig);
+        saveCharacterConfig(nextConfig);
+        return nextConfig;
+      });
+    },
+    [],
+  );
+  const bumpCastKey = useCallback(() => {
+    setCastKey((value) => value + 1);
+  }, []);
+  const refreshCharacterAssets = useCallback(
+    async (
+      cacheBust = false,
+      reconcileOptions: CharacterAssetReconcileOptions = {},
+    ) => {
+      const nextCharacters = await fetchCharacterAssets(cacheBust);
+      setCharacterAssets(
+        reconcileCharacterAssets(nextCharacters, reconcileOptions),
+      );
+    },
+    [],
+  );
+  const upsertCharacterAsset = useCallback(
+    (character: CharacterAsset) => {
+      setCharacterAssets((currentCharacters) =>
+        reconcileCharacterAssets(currentCharacters, { upsert: [character] }),
+      );
+      void refreshCharacterAssets(true, { upsert: [character] });
+    },
+    [refreshCharacterAssets],
+  );
+  const removeCharacterAsset = useCallback(
+    (characterId: string) => {
+      setCharacterAssets((currentCharacters) =>
+        reconcileCharacterAssets(currentCharacters, {
+          removeIds: [characterId],
+        }),
+      );
+      updateCharacterConfig((currentConfig) =>
+        removeCharacterConfigReferences(currentConfig, characterId),
+      );
+      void refreshCharacterAssets(true, { removeIds: [characterId] });
+    },
+    [refreshCharacterAssets, updateCharacterConfig],
+  );
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -477,7 +548,7 @@ function App() {
               <CharacterActor
                 ambientMotion={ambientMotion}
                 character={character}
-                key={`${castKey}-${character.id}`}
+                key={`${castKey}-${character.id}-${character.characterId}`}
               />
             ))}
           </div>
@@ -594,6 +665,20 @@ function App() {
             </label>
           </section>
 
+          <CastingPanel
+            characterAssets={characterAssets}
+            characterConfig={characterConfig}
+            expanded={showCastingPanel}
+            isDevServer={import.meta.env.DEV}
+            slotStageDisplayNames={slotStageDisplayNames}
+            t={t}
+            onCharacterDeleted={removeCharacterAsset}
+            onCharacterUploaded={upsertCharacterAsset}
+            onConfigChange={updateCharacterConfig}
+            onStageRefresh={bumpCastKey}
+            onToggle={() => setShowCastingPanel((value) => !value)}
+          />
+
           <section className="controls-section">
             <button
               aria-expanded={showAdvancedSource}
@@ -674,79 +759,140 @@ function App() {
 function createStageCharacters({
   agentMap,
   characterAssets,
-  activeCharacterId,
+  characterConfig,
+  activeSlotId,
   activeAgentName,
   activeLine,
   hostLine,
   isActiveSpeaker,
   targetAgentName,
-  targetCharacterId,
+  targetSlotId,
 }: {
   agentMap: AgentCharacterMap;
   characterAssets: CharacterAsset[];
-  activeCharacterId?: CharacterId;
+  characterConfig: CharacterConfig;
+  activeSlotId?: SlotId;
   activeAgentName?: string;
   activeLine?: string;
   hostLine?: string;
   isActiveSpeaker: boolean;
   targetAgentName?: string;
-  targetCharacterId?: CharacterId;
+  targetSlotId?: SlotId;
 }): StageCharacter[] {
-  const primaryAgentByCharacter = createPrimaryAgentByCharacter(agentMap);
-  const neededCharacterIds = new Set<CharacterId>([
-    HOST_CHARACTER_ID,
-    ...Object.values(agentMap).filter(
-      (characterId): characterId is CharacterId => Boolean(characterId),
+  const characterById = createCharacterById(characterAssets);
+  const primaryAgentBySlot = createPrimaryAgentBySlot(agentMap);
+  const hostStageDisplayName =
+    characterById.get(DEFAULT_CASTING.host)?.role ?? "Boss";
+  const neededSlotIds = new Set<SlotId>([
+    "host",
+    ...Object.values(agentMap).filter((slotId): slotId is SlotId =>
+      Boolean(slotId),
     ),
   ]);
 
-  return characterAssets
-    .filter((asset) => neededCharacterIds.has(asset.id))
-    .map((asset, index) => {
-      let state: CharacterState = "idle";
-      let currentLine: string | undefined;
-      let displayName =
-        asset.id === HOST_CHARACTER_ID
-          ? asset.role
-          : (primaryAgentByCharacter[asset.id] ?? asset.displayName);
+  const stageCharacters: StageCharacter[] = [];
 
-      if (hostLine && asset.id === HOST_CHARACTER_ID) {
-        state = "speaking";
-        currentLine = hostLine;
-      } else if (asset.id === activeCharacterId) {
-        state = "speaking";
-        currentLine = activeLine;
-        displayName = activeAgentName ?? displayName;
-      } else if (asset.id === targetCharacterId) {
-        state = "waiting";
-        displayName = targetAgentName ?? displayName;
-      }
+  for (const slotId of SLOT_IDS.filter((slotId) => neededSlotIds.has(slotId))) {
+    const index = stageCharacters.length;
+    const characterId = getResolvedCharacterId(
+      slotId,
+      characterConfig,
+      characterAssets,
+    );
+    const fallbackCharacterId = DEFAULT_CASTING[slotId];
+    const asset =
+      characterById.get(characterId) ?? characterById.get(fallbackCharacterId);
+    if (!asset) continue;
 
-      return {
-        id: asset.id,
-        displayName,
-        portraitPath: asset.portraitPath,
-        spritesheetPath: asset.spritesheetPath,
-        position: DEFAULT_POSITIONS[asset.id],
-        state,
-        currentLine,
-        isActiveSpeaker:
-          (hostLine && asset.id === HOST_CHARACTER_ID) ||
-          (asset.id === activeCharacterId && isActiveSpeaker),
-        entranceDelayMs: index * 70,
-      };
+    const renamedDisplayName = characterConfig.renames[asset.id]?.trim();
+    let state: CharacterState = "idle";
+    let currentLine: string | undefined;
+    let displayName =
+      slotId === "host"
+        ? hostStageDisplayName
+        : (primaryAgentBySlot[slotId] ??
+          getCharacterDisplayName(asset, characterConfig));
+
+    if (hostLine && slotId === "host") {
+      state = "speaking";
+      currentLine = hostLine;
+    } else if (slotId === activeSlotId) {
+      state = "speaking";
+      currentLine = activeLine;
+      displayName = activeAgentName ?? displayName;
+    } else if (slotId === targetSlotId) {
+      state = "waiting";
+      displayName = targetAgentName ?? displayName;
+    }
+
+    stageCharacters.push({
+      id: slotId,
+      characterId: asset.id,
+      displayName: renamedDisplayName || displayName,
+      portraitPath: asset.portraitPath,
+      spritesheetPath: asset.spritesheetPath,
+      richMotion: asset.richMotion ?? true,
+      position: DEFAULT_SLOT_POSITIONS[slotId],
+      state,
+      currentLine,
+      isActiveSpeaker:
+        (hostLine && slotId === "host") ||
+        (slotId === activeSlotId && isActiveSpeaker),
+      entranceDelayMs: index * 70,
     });
+  }
+
+  return stageCharacters;
 }
 
-function createPrimaryAgentByCharacter(
+function createPrimaryAgentBySlot(
   agentMap: AgentCharacterMap,
-): Partial<Record<CharacterId, string>> {
-  const primaryAgentByCharacter: Partial<Record<CharacterId, string>> = {};
-  for (const [agentName, characterId] of Object.entries(agentMap)) {
-    if (!characterId || primaryAgentByCharacter[characterId]) continue;
-    primaryAgentByCharacter[characterId] = agentName;
+): Partial<Record<SlotId, string>> {
+  const primaryAgentBySlot: Partial<Record<SlotId, string>> = {};
+  for (const [agentName, slotId] of Object.entries(agentMap)) {
+    if (!slotId || primaryAgentBySlot[slotId]) continue;
+    primaryAgentBySlot[slotId] = agentName;
   }
-  return primaryAgentByCharacter;
+  return primaryAgentBySlot;
+}
+
+function reconcileCharacterAssets(
+  characterAssets: CharacterAsset[],
+  { removeIds = [], upsert = [] }: CharacterAssetReconcileOptions,
+): CharacterAsset[] {
+  const removedIds = new Set(removeIds);
+  const characterById = new Map<CharacterRef, CharacterAsset>();
+
+  for (const character of characterAssets) {
+    if (!removedIds.has(character.id)) {
+      characterById.set(character.id, character);
+    }
+  }
+
+  for (const character of upsert) {
+    if (!removedIds.has(character.id)) {
+      characterById.set(character.id, normalizeCharacterAsset(character));
+    }
+  }
+
+  return [...characterById.values()];
+}
+
+function removeCharacterConfigReferences(
+  config: CharacterConfig,
+  characterId: CharacterRef,
+): CharacterConfig {
+  const casting = { ...config.casting };
+  const renames = { ...config.renames };
+
+  for (const [slotId, configuredCharacterId] of Object.entries(casting)) {
+    if (configuredCharacterId === characterId) {
+      delete casting[slotId as SlotId];
+    }
+  }
+  delete renames[characterId];
+
+  return { casting, renames };
 }
 
 function formatCaption(entry: AgmsgEntry, t: Translate): string {
@@ -934,6 +1080,73 @@ async function fetchSampleLog(language: Language): Promise<RawAgmsgRecord[]> {
     throw new Error(translateString(language, "errorLoadSample"));
   }
   return (await response.json()) as RawAgmsgRecord[];
+}
+
+async function fetchCharacterAssets(
+  cacheBust = false,
+): Promise<CharacterAsset[]> {
+  const assetsResponse = await fetch(`${ASSET_BASE}assets.json`);
+  if (!assetsResponse.ok) {
+    throw new Error(translateString("en", "errorLoadAssets"));
+  }
+
+  const assetsManifest = (await assetsResponse.json()) as AssetsManifest;
+  const characterResponse = await fetch(
+    `${ASSET_BASE}${assetsManifest.characters}`,
+  );
+  if (!characterResponse.ok) {
+    throw new Error(translateString("en", "errorLoadCharacters"));
+  }
+
+  return mergeCharacterAssets(
+    (await characterResponse.json()) as CharacterAsset[],
+    await fetchCustomCharacters(cacheBust),
+  ).map(normalizeCharacterAsset);
+}
+
+async function fetchCustomCharacters(
+  cacheBust = false,
+): Promise<CharacterAsset[]> {
+  try {
+    const query = cacheBust ? `?t=${Date.now()}` : "";
+    const response = await fetch(
+      `${ASSET_BASE}${CUSTOM_CHARACTERS_PATH}${query}`,
+    );
+    if (response.status === 404) return [];
+    if (!response.ok) {
+      console.warn("Failed to load custom character assets manifest.");
+      return [];
+    }
+
+    const payload: unknown = await response.json();
+    if (!Array.isArray(payload)) {
+      console.warn(
+        "Ignoring custom character assets manifest: expected array.",
+      );
+      return [];
+    }
+
+    return payload.filter(isCharacterAsset);
+  } catch (error) {
+    console.warn("Ignoring custom character assets manifest.", error);
+    return [];
+  }
+}
+
+function isCharacterAsset(value: unknown): value is CharacterAsset {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<CharacterAsset>;
+  return (
+    typeof record.id === "string" &&
+    typeof record.displayName === "string" &&
+    typeof record.role === "string" &&
+    typeof record.description === "string" &&
+    (record.portraitPath === undefined ||
+      typeof record.portraitPath === "string") &&
+    (record.spritesheetPath === undefined ||
+      typeof record.spritesheetPath === "string") &&
+    (record.richMotion === undefined || typeof record.richMotion === "boolean")
+  );
 }
 
 export default App;

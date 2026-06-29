@@ -40,6 +40,13 @@ The sample and JSON import work anywhere (including a production `npm run build`
 Reading your local agmsg history needs the dev server, since that part runs a small
 helper that reads your local `agmsg` data.
 
+## Custom characters
+
+Want to cast your own original characters instead of the bundled roster? Use the
+**[agmsg Character Sprites skill](.codex/skills/agmsg-character-sprites/README.md)**
+to generate a character spritesheet from a portrait, then upload it from the app's
+Casting panel.
+
 ## Learn more
 
 See **[docs/details.md](docs/details.md)** for the controls, the log format, the

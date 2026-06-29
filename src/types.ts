@@ -9,6 +9,19 @@ export type CharacterId =
   | "mio"
   | "sora";
 
+export type CharacterRef = string;
+
+export type SlotId =
+  | "host"
+  | "actor-1"
+  | "actor-2"
+  | "actor-3"
+  | "actor-4"
+  | "actor-5"
+  | "actor-6"
+  | "actor-7"
+  | "actor-8";
+
 export type CharacterState =
   | "idle"
   | "speaking"
@@ -43,10 +56,12 @@ export interface AgmsgEntry {
 }
 
 export interface StageCharacter {
-  id: CharacterId;
+  id: SlotId;
+  characterId: CharacterRef;
   displayName: string;
-  portraitPath: string;
+  portraitPath?: string;
   spritesheetPath?: string;
+  richMotion: boolean;
   position: {
     x: number;
     y: number;
@@ -57,15 +72,21 @@ export interface StageCharacter {
   entranceDelayMs: number;
 }
 
-export type AgentCharacterMap = Partial<Record<string, CharacterId>>;
+export type AgentCharacterMap = Partial<Record<string, SlotId>>;
 
 export interface CharacterAsset {
-  id: CharacterId;
+  id: CharacterRef;
   displayName: string;
   role: string;
   description: string;
-  portraitPath: string;
+  portraitPath?: string;
   spritesheetPath?: string;
+  richMotion?: boolean;
+}
+
+export interface CharacterConfig {
+  casting: Partial<Record<SlotId, CharacterRef>>;
+  renames: Partial<Record<CharacterRef, string>>;
 }
 
 export interface AssetsManifest {

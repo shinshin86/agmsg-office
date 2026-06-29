@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CharacterId, CharacterState, StageCharacter } from "../types";
+import type { CharacterState, StageCharacter } from "../types";
 
 type PetAction =
   | "idle"
@@ -45,19 +45,6 @@ const CELL_HEIGHT = 208;
 const ATLAS_COLUMNS = 8;
 const ATLAS_ROWS = 9;
 const MAX_BUBBLE_CHARS = 92;
-// Characters with a real multi-pose spritesheet get ambient motion.
-// Every character now has one; drop an id here if its sheet regresses.
-const RICH_MOTION_IDS: ReadonlySet<CharacterId> = new Set([
-  "miko",
-  "mai",
-  "haya",
-  "suzu",
-  "kii",
-  "rin",
-  "nao",
-  "mio",
-  "sora",
-]);
 const AMBIENT_REST_ACTIONS: readonly AmbientRestAction[] = [
   "waving",
   "review",
@@ -110,7 +97,7 @@ function useSpriteFrame(action: PetAction) {
 }
 
 function getMotionStagger(character: StageCharacter) {
-  const idOffset = [...character.id].reduce(
+  const idOffset = [...character.characterId].reduce(
     (total, value) => total + value.charCodeAt(0),
     0,
   );
@@ -313,9 +300,7 @@ export function CharacterActor({
 }: CharacterActorProps) {
   const baseAction = actionForState(character.state, character.isActiveSpeaker);
   const ambientMotionEnabled =
-    ambientMotion &&
-    character.state === "idle" &&
-    RICH_MOTION_IDS.has(character.id);
+    ambientMotion && character.state === "idle" && character.richMotion;
   const motion = useActorMotion(character, baseAction, ambientMotionEnabled);
   const displayAction = ambientMotionEnabled
     ? motion.walking
@@ -337,7 +322,7 @@ export function CharacterActor({
 
   return (
     <div
-      className={`character character-${character.id} character-${character.state}${
+      className={`character slot-${character.id} character-${toCssClassToken(character.characterId)} character-${character.state}${
         bubbleBelow ? " character-bubble-below" : ""
       }`}
       style={{
@@ -373,7 +358,7 @@ export function CharacterActor({
               : undefined
           }
         >
-          {!character.spritesheetPath && (
+          {!character.spritesheetPath && character.portraitPath && (
             <img
               alt={character.displayName}
               className="character-portrait"
@@ -385,4 +370,8 @@ export function CharacterActor({
       </div>
     </div>
   );
+}
+
+function toCssClassToken(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, "-");
 }

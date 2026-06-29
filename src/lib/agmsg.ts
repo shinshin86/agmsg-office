@@ -1,21 +1,20 @@
 import type {
   AgentCharacterMap,
   AgmsgEntry,
-  CharacterId,
   RawAgmsgRecord,
+  SlotId,
 } from "../types";
 
-export const FALLBACK_CHARACTER_ID: CharacterId = "kii";
-export const HOST_CHARACTER_ID: CharacterId = "miko";
-export const ACTOR_CHARACTER_IDS: CharacterId[] = [
-  "mai",
-  "haya",
-  "suzu",
-  "kii",
-  "rin",
-  "nao",
-  "mio",
-  "sora",
+export const FALLBACK_SLOT_ID: SlotId = "actor-4";
+export const ACTOR_SLOT_IDS: SlotId[] = [
+  "actor-1",
+  "actor-2",
+  "actor-3",
+  "actor-4",
+  "actor-5",
+  "actor-6",
+  "actor-7",
+  "actor-8",
 ];
 
 export function normalizeAgmsg(raw: RawAgmsgRecord): AgmsgEntry {
@@ -45,21 +44,19 @@ export function createAgentCharacterMap(
 
   for (const [index, agentName] of firstSeenAgents.entries()) {
     agentMap[agentName] =
-      index < ACTOR_CHARACTER_IDS.length
-        ? ACTOR_CHARACTER_IDS[index]
-        : ACTOR_CHARACTER_IDS[
-            stableHash(agentName) % ACTOR_CHARACTER_IDS.length
-          ];
+      index < ACTOR_SLOT_IDS.length
+        ? ACTOR_SLOT_IDS[index]
+        : ACTOR_SLOT_IDS[stableHash(agentName) % ACTOR_SLOT_IDS.length];
   }
 
   return agentMap;
 }
 
-export function resolveCharacterId(
+export function resolveSlotId(
   agentName: string,
   agentMap: AgentCharacterMap,
-): CharacterId {
-  return agentMap[agentName] ?? FALLBACK_CHARACTER_ID;
+): SlotId {
+  return agentMap[agentName] ?? FALLBACK_SLOT_ID;
 }
 
 export function isControlMessage(body: string): boolean {
