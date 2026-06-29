@@ -456,6 +456,9 @@ function App() {
     },
     [],
   );
+  const bumpCastKey = useCallback(() => {
+    setCastKey((value) => value + 1);
+  }, []);
   const refreshCharacterAssets = useCallback(
     async (
       cacheBust = false,
@@ -672,6 +675,7 @@ function App() {
             onCharacterDeleted={removeCharacterAsset}
             onCharacterUploaded={upsertCharacterAsset}
             onConfigChange={updateCharacterConfig}
+            onStageRefresh={bumpCastKey}
             onToggle={() => setShowCastingPanel((value) => !value)}
           />
 

@@ -92,6 +92,7 @@ export const STRINGS = {
     topbarSubtitle: "Replay agent messages as a character stage.",
     unknown: "unknown",
     uploadNewCharacter: "Upload new",
+    portraitPreview: "Portrait preview",
     portraitUpload: "Optional portrait.png",
   },
   ja: {
@@ -181,6 +182,7 @@ export const STRINGS = {
       "エージェントのメッセージをキャラクターステージとして再生します。",
     unknown: "不明",
     uploadNewCharacter: "新規アップロード",
+    portraitPreview: "ポートレートプレビュー",
     portraitUpload: "portrait.png をアップロード（任意）",
   },
 } as const;

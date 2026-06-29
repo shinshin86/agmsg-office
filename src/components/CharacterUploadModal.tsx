@@ -33,6 +33,9 @@ interface CharacterUploadModalProps {
 
 type ModalMode = "library" | "upload";
 
+const ASSET_READY_POLL_MS = 60;
+const ASSET_READY_TIMEOUT_MS = 3000;
+
 export function CharacterUploadModal({
   characterConfig,
   customCharacters,
@@ -48,6 +51,7 @@ export function CharacterUploadModal({
   const [portraitFile, setPortraitFile] = useState<File | undefined>();
   const [displayName, setDisplayName] = useState("");
   const [spritesheetUrl, setSpritesheetUrl] = useState("");
+  const [portraitUrl, setPortraitUrl] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const hasCustomCharacters = customCharacters.length > 0;
@@ -63,6 +67,17 @@ export function CharacterUploadModal({
     setSpritesheetUrl(objectUrl);
     return () => URL.revokeObjectURL(objectUrl);
   }, [spritesheetFile]);
+
+  useEffect(() => {
+    if (!portraitFile) {
+      setPortraitUrl("");
+      return undefined;
+    }
+
+    const objectUrl = URL.createObjectURL(portraitFile);
+    setPortraitUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [portraitFile]);
 
   const sortedCustomCharacters = useMemo(
     () =>
@@ -188,6 +203,14 @@ export function CharacterUploadModal({
               />
             </label>
 
+            {portraitUrl && (
+              <img
+                alt={t("portraitPreview")}
+                className="portrait-preview"
+                src={portraitUrl}
+              />
+            )}
+
             <label>
               {t("characterName")}
               <input
@@ -250,6 +273,10 @@ export function CharacterUploadModal({
         spritesheet: spritesheetFile,
         portrait: portraitFile,
       });
+      await Promise.all([
+        waitForServableAsset(character.spritesheetPath),
+        waitForServableAsset(character.portraitPath),
+      ]);
       await onUploadCharacter(character);
     } catch (saveError) {
       setError(formatValidationError(saveError));
@@ -270,6 +297,31 @@ export function CharacterUploadModal({
       setBusy(false);
     }
   }
+}
+
+async function waitForServableAsset(path: string | undefined): Promise<void> {
+  if (!path) return;
+
+  const url = `/assets/characters/${path}`;
+  const deadline = Date.now() + ASSET_READY_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url, { method: "HEAD", cache: "no-store" });
+      const contentType = response.headers.get("content-type") ?? "";
+      if (response.ok && contentType.startsWith("image/")) {
+        return;
+      }
+    } catch {
+      // The dev server may briefly miss newly written public files.
+    }
+
+    await sleep(ASSET_READY_POLL_MS);
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function formatValidationError(error: unknown): string {

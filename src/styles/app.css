@@ -916,6 +916,15 @@ input[type="file"]::file-selector-button:hover {
   animation: sprite-idle-preview 1920ms steps(6) infinite;
 }
 
+.portrait-preview {
+  width: 96px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border: 1px solid #d7dee8;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;

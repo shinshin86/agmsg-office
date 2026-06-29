@@ -35,6 +35,7 @@ interface CastingPanelProps {
   onConfigChange: (
     updater: (config: CharacterConfig) => CharacterConfig,
   ) => void;
+  onStageRefresh: () => void;
   onToggle: () => void;
 }
 
@@ -48,6 +49,7 @@ export function CastingPanel({
   onCharacterDeleted,
   onCharacterUploaded,
   onConfigChange,
+  onStageRefresh,
   onToggle,
 }: CastingPanelProps) {
   const [editingSlotId, setEditingSlotId] = useState<SlotId | undefined>();
@@ -207,6 +209,7 @@ export function CastingPanel({
             onConfigChange((currentConfig) =>
               updateCasting(currentConfig, editingSlotId, characterId),
             );
+            onStageRefresh();
             setEditingSlotId(undefined);
           }}
           onClose={() => setEditingSlotId(undefined)}
@@ -218,6 +221,7 @@ export function CastingPanel({
             onConfigChange((currentConfig) =>
               updateCasting(currentConfig, editingSlotId, character.id),
             );
+            onStageRefresh();
             setEditingSlotId(undefined);
           }}
         />
