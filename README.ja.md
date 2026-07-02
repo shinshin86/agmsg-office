@@ -22,6 +22,9 @@ npm run dev
 **Start** を押します。開発サーバ（`npm run dev`）の起動中は、インストール済みの `agmsg`
 履歴を直接読み取って再生します。
 
+Windows でローカルの `agmsg` データを読むには Bash が必要です。Git for Windows を入れるか、
+`npm run dev` の前に `AGMSG_BASH` へ `bash.exe` のフルパスを指定してください。
+
 ## 仕組み
 
 agmsg Office は、agmsg のログを読み込み、正規化し、各エージェントにキャラクターを割り当て、
