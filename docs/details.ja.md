@@ -78,6 +78,10 @@ GET /api/agmsg/history?team=<team>&limit=80
 再生できます。スクリプトやデータが無ければ同梱サンプルにフォールバックします。この
 ミドルウェアは開発時専用で、本番ビルドには含まれません。
 
+Windows では、この dev API が `.sh` スクリプトを Bash 経由で実行します。Git for Windows の
+既定インストール先は自動検出します。別の場所に Bash がある場合は、開発サーバ起動前に
+`AGMSG_BASH` へ `bash.exe` のフルパスを指定してください。
+
 ### 3. 手動 JSON インポート
 
 **Advanced** 内の **Import JSON** からローカルの `.json` ファイル（下記形式のレコード配列）を

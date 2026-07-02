@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
 import {
   mkdir,
   readFile,
@@ -9,7 +10,8 @@ import {
   writeFile,
 } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { dirname, join, resolve, sep } from "node:path";
+import { homedir } from "node:os";
+import { delimiter, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -26,14 +28,14 @@ const CUSTOM_CHARACTER_MANIFEST_PATH = join(
   CUSTOM_CHARACTER_ROOT,
   "characters.json",
 );
-const AGMSG_SCRIPT_DIR = join(
-  process.env.HOME ?? "",
-  ".agents/skills/agmsg/scripts",
-);
-const AGMSG_TEAMS_DIR = join(
-  process.env.HOME ?? "",
-  ".agents/skills/agmsg/teams",
-);
+const AGMSG_HOME = homedir();
+const AGMSG_SCRIPT_DIR = join(AGMSG_HOME, ".agents/skills/agmsg/scripts");
+const AGMSG_TEAMS_DIR = join(AGMSG_HOME, ".agents/skills/agmsg/teams");
+const WINDOWS_BASH_CANDIDATES = [
+  "C:\\Program Files\\Git\\bin\\bash.exe",
+  "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
+  "C:\\Program Files (x86)\\Git\\bin\\bash.exe",
+];
 const SCRIPT_TIMEOUT_MS = 5000;
 const FALLBACK_REASON = "Local agmsg data is unavailable.";
 const MAX_REQUEST_BYTES = 8_500_000;
@@ -578,10 +580,11 @@ async function handleHistoryRequest(req: IncomingMessage, res: ServerResponse) {
 }
 
 function runAgmsgScript(scriptName: string, args: string[]): Promise<string> {
+  const command = createAgmsgScriptCommand(scriptName, args);
   return new Promise((resolvePromise, reject) => {
     execFile(
-      join(AGMSG_SCRIPT_DIR, scriptName),
-      args,
+      command.file,
+      command.args,
       { timeout: SCRIPT_TIMEOUT_MS },
       (error, stdout, stderr) => {
         if (error) {
@@ -594,6 +597,46 @@ function runAgmsgScript(scriptName: string, args: string[]): Promise<string> {
       },
     );
   });
+}
+
+function createAgmsgScriptCommand(
+  scriptName: string,
+  args: string[],
+): { file: string; args: string[] } {
+  const scriptPath = join(AGMSG_SCRIPT_DIR, scriptName);
+  if (process.platform !== "win32") {
+    return { file: scriptPath, args };
+  }
+
+  return {
+    file: resolveWindowsBashPath(),
+    args: [scriptPath, ...args],
+  };
+}
+
+function resolveWindowsBashPath(): string {
+  if (process.env.AGMSG_BASH) return process.env.AGMSG_BASH;
+
+  // Prefer Git for Windows' bash over a bare PATH lookup: PATH often surfaces
+  // the WSL launcher (System32 or the WindowsApps alias), whose Unix path
+  // semantics can't resolve the Windows-style script path we pass in.
+  for (const candidate of WINDOWS_BASH_CANDIDATES) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  const pathBash = findWindowsBashOnPath();
+  if (pathBash) return pathBash;
+
+  return "bash";
+}
+
+function findWindowsBashOnPath(): string | undefined {
+  const paths = process.env.PATH?.split(delimiter) ?? [];
+  for (const path of paths) {
+    const candidate = join(path, "bash.exe");
+    if (existsSync(candidate)) return candidate;
+  }
+  return undefined;
 }
 
 function parseTeamAgents(output: string): string[] {

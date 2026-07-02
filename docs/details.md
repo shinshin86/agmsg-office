@@ -83,6 +83,11 @@ installed `agmsg` scripts. Pick a team from the Source dropdown to replay your r
 conversations. If the scripts or data are unavailable, it falls back to the bundled
 sample. This middleware is dev-only and never ships in the production build.
 
+On Windows, the dev API runs those `.sh` scripts through Bash. Git for Windows is
+detected automatically in its default install locations. If Bash is installed
+elsewhere, set `AGMSG_BASH` to the full path of `bash.exe` before starting the dev
+server.
+
 ### 3. Manual JSON import
 
 Use **Import JSON** (in **Advanced**) to load a local `.json` file. It should be an

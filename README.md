@@ -22,6 +22,9 @@ it. To watch **your own data**, pick one of your local `agmsg` teams from the
 **Source** dropdown and press **Start**. While the dev server (`npm run dev`) is
 running, the app reads your installed `agmsg` history directly.
 
+On Windows, reading local `agmsg` data requires Bash. Install Git for Windows, or
+set `AGMSG_BASH` to the full path of `bash.exe` before running `npm run dev`.
+
 ## How it works
 
 agmsg Office loads an agmsg log, normalizes it, assigns each agent a character, and
