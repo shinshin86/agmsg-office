@@ -49,12 +49,13 @@ The app is a small pipeline from raw log records to an animated stage:
 6. **Render**: `src/components/CharacterActor.tsx` draws each character from a
    spritesheet with idle, walk, and gesture motion. Only the characters used by the
    current log appear (plus the host), and they animate in when a log loads.
-   While idle, each character wanders the office following its own motion
-   personality defined in `src/lib/motionPersonality.ts`: walk speed, roam range,
-   pause rhythm, preferred gestures, and how often it strolls across the whole
-   office all differ per character. Custom characters get a personality derived
-   deterministically from their id, so an uploaded character always moves the
-   same way.
+   While idle, each character putters around its own desk following its own
+   motion personality defined in `src/lib/motionPersonality.ts`: walk speed,
+   roam radius, pause rhythm, and preferred gestures (waving, reviewing,
+   jumping, waiting) all differ per character, but everyone stays within a
+   fixed range of their home spot so the stage stays tidy. Custom characters
+   get a personality derived deterministically from their id, so an uploaded
+   character always moves the same way.
 
 All of the above is client-side React state. The only server-side code is the
 optional dev API in `vite.config.ts`, which runs only during `npm run dev`.
@@ -143,10 +144,12 @@ always shows on the nameplate and bubble, so it stays clear who is speaking. `ag
 teams have no hard size limit, so this keeps any team viewable.
 
 Each character also has its own **motion personality** (`src/lib/motionPersonality.ts`)
-used while idle on stage: Boss patrols the whole office, Haya darts around and
-jumps, Suzu rarely leaves her spot and sinks into long reviews, Kii waves at
-coworkers a lot, and so on. Custom characters get a personality derived from a
-hash of their id, so every uploaded character moves in its own consistent way.
+used while idle on stage. Everyone stays within a fixed radius of their own desk,
+and the individuality shows in how they behave there: Haya fidgets and jumps,
+Suzu rarely moves and sinks into long reviews, Kii waves at coworkers a lot,
+Boss makes brisk little rounds of her corner, and so on. Custom characters get a
+personality derived from a hash of their id, so every uploaded character moves in
+its own consistent way.
 
 ## Project structure
 

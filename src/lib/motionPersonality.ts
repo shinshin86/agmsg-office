@@ -15,24 +15,23 @@ export interface MotionPersonality {
   /** Pause between strolls, in milliseconds. */
   pauseMsMin: number;
   pauseMsMax: number;
-  /** Chance that a stroll becomes a long trip across the whole office. */
-  longTripChance: number;
   /** Relative weights for the rest action picked when a stroll ends. */
   restActionWeights: Record<AmbientRestAction, number>;
   /** How long a non-idle rest action plays, in milliseconds. */
   restMsMin: number;
   restMsMax: number;
+  /** Chance to chain into another gesture while still resting at the desk. */
+  restChainChance: number;
 }
 
 const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
-  // Boss: cheerful, patrols the whole office and greets everyone.
+  // Boss: cheerful, makes lively rounds of her own corner and greets everyone.
   miko: {
     speedFactor: 1.15,
-    wanderRangeX: 30,
-    wanderRangeY: 3,
+    wanderRangeX: 10,
+    wanderRangeY: 2.5,
     pauseMsMin: 2200,
     pauseMsMax: 5200,
-    longTripChance: 0.35,
     restActionWeights: {
       idle: 4,
       waving: 3,
@@ -42,15 +41,15 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 1200,
     restMsMax: 2600,
+    restChainChance: 0.5,
   },
-  // Gentle: stays near her desk, unhurried short strolls.
+  // Gentle: stays close to her desk, unhurried short strolls.
   mai: {
     speedFactor: 0.8,
-    wanderRangeX: 8,
+    wanderRangeX: 6,
     wanderRangeY: 1.5,
     pauseMsMin: 4200,
     pauseMsMax: 8000,
-    longTripChance: 0.05,
     restActionWeights: {
       idle: 6,
       waving: 2,
@@ -60,15 +59,15 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 1400,
     restMsMax: 2600,
+    restChainChance: 0.3,
   },
-  // Lively: darts around, barely sits still, jumps when pleased.
+  // Lively: fidgety around her desk, jumps when pleased.
   haya: {
     speedFactor: 1.45,
-    wanderRangeX: 20,
-    wanderRangeY: 3,
+    wanderRangeX: 9,
+    wanderRangeY: 2.5,
     pauseMsMin: 1400,
     pauseMsMax: 3200,
-    longTripChance: 0.3,
     restActionWeights: {
       idle: 3,
       waving: 2,
@@ -78,15 +77,15 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 900,
     restMsMax: 1800,
+    restChainChance: 0.65,
   },
   // Calm: rarely leaves her spot, sinks into long reviews.
   suzu: {
     speedFactor: 0.7,
-    wanderRangeX: 6,
+    wanderRangeX: 4,
     wanderRangeY: 1,
     pauseMsMin: 5200,
     pauseMsMax: 9600,
-    longTripChance: 0.04,
     restActionWeights: {
       idle: 5,
       waving: 0.5,
@@ -96,15 +95,15 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 1800,
     restMsMax: 3400,
+    restChainChance: 0.35,
   },
-  // Friendly: wanders at an easy pace and waves at coworkers a lot.
+  // Friendly: easy pace around her desk, waves at coworkers a lot.
   kii: {
     speedFactor: 1,
-    wanderRangeX: 14,
+    wanderRangeX: 8,
     wanderRangeY: 2,
     pauseMsMin: 2600,
     pauseMsMax: 5600,
-    longTripChance: 0.18,
     restActionWeights: {
       idle: 4,
       waving: 4,
@@ -114,15 +113,15 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 1200,
     restMsMax: 2400,
+    restChainChance: 0.55,
   },
   // Bright: quick on her feet, upbeat little hops between errands.
   rin: {
     speedFactor: 1.25,
-    wanderRangeX: 16,
-    wanderRangeY: 2.5,
+    wanderRangeX: 8.5,
+    wanderRangeY: 2,
     pauseMsMin: 1800,
     pauseMsMax: 4200,
-    longTripChance: 0.22,
     restActionWeights: {
       idle: 3,
       waving: 3,
@@ -132,15 +131,15 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 1000,
     restMsMax: 2000,
+    restChainChance: 0.6,
   },
   // Composed: deliberate walks, often pauses to review her notes.
   nao: {
     speedFactor: 0.9,
-    wanderRangeX: 12,
+    wanderRangeX: 7,
     wanderRangeY: 1.5,
     pauseMsMin: 3600,
     pauseMsMax: 7000,
-    longTripChance: 0.12,
     restActionWeights: {
       idle: 4,
       waving: 0.5,
@@ -150,15 +149,15 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 1600,
     restMsMax: 3000,
+    restChainChance: 0.45,
   },
   // Warm: relaxed strolls around her own corner of the office.
   mio: {
     speedFactor: 0.85,
-    wanderRangeX: 10,
-    wanderRangeY: 2,
+    wanderRangeX: 6.5,
+    wanderRangeY: 1.8,
     pauseMsMin: 3000,
     pauseMsMax: 6400,
-    longTripChance: 0.08,
     restActionWeights: {
       idle: 5,
       waving: 2.5,
@@ -168,15 +167,15 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 1400,
     restMsMax: 2600,
+    restChainChance: 0.4,
   },
   // Steady: keeps a regular rhythm, methodical rounds of her area.
   sora: {
     speedFactor: 0.95,
-    wanderRangeX: 13,
+    wanderRangeX: 7.5,
     wanderRangeY: 1.2,
     pauseMsMin: 3200,
     pauseMsMax: 6000,
-    longTripChance: 0.15,
     restActionWeights: {
       idle: 4,
       waving: 1,
@@ -186,6 +185,7 @@ const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
     },
     restMsMin: 1400,
     restMsMax: 2600,
+    restChainChance: 0.4,
   },
 };
 
@@ -222,11 +222,10 @@ function derivePersonality(characterId: string): MotionPersonality {
 
   return {
     speedFactor: 0.75 + random() * 0.65,
-    wanderRangeX: 6 + random() * 18,
-    wanderRangeY: 1 + random() * 2,
+    wanderRangeX: 4 + random() * 6,
+    wanderRangeY: 1 + random() * 1.5,
     pauseMsMin,
     pauseMsMax: pauseMsMin + 1800 + random() * 3000,
-    longTripChance: 0.05 + random() * 0.25,
     restActionWeights: {
       idle: 3 + random() * 3,
       waving: random() * 3,
@@ -236,6 +235,7 @@ function derivePersonality(characterId: string): MotionPersonality {
     },
     restMsMin: 1000 + random() * 800,
     restMsMax: 2000 + random() * 1400,
+    restChainChance: 0.3 + random() * 0.35,
   };
 }
 

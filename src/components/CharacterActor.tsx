@@ -215,26 +215,29 @@ function useActorMotion(
               }
             }
             if (restActionUntil > 0 && now > restActionUntil) {
-              restAction = "idle";
-              restActionUntil = 0;
+              const chainGesture =
+                ambientMoving &&
+                now < pausedUntil &&
+                Math.random() < traits.restChainChance;
+              restAction = chainGesture
+                ? pickRestAction(traits.restActionWeights)
+                : "idle";
+              restActionUntil =
+                restAction === "idle"
+                  ? 0
+                  : now +
+                    traits.restMsMin +
+                    Math.random() * (traits.restMsMax - traits.restMsMin);
             }
             if (now > pausedUntil) {
               if (ambientMoving) {
-                const longTrip = Math.random() < traits.longTripChance;
-                const nextX = longTrip
-                  ? STAGE_MIN_X + Math.random() * (STAGE_MAX_X - STAGE_MIN_X)
-                  : roamMinX + Math.random() * (roamMaxX - roamMinX);
-                targetX = clamp(nextX, STAGE_MIN_X, STAGE_MAX_X);
-                targetY = clamp(
-                  roamMinY + Math.random() * (roamMaxY - roamMinY),
-                  STAGE_MIN_Y,
-                  STAGE_MAX_Y,
-                );
+                targetX = roamMinX + Math.random() * (roamMaxX - roamMinX);
+                targetY = roamMinY + Math.random() * (roamMaxY - roamMinY);
               } else {
                 targetX = clamp(
                   home.x + (Math.random() * 2 - 1) * 5.5,
-                  STAGE_MIN_X,
-                  STAGE_MAX_X,
+                  roamMinX,
+                  roamMaxX,
                 );
                 targetY = home.y;
               }
@@ -267,11 +270,11 @@ function useActorMotion(
           y += vy * elapsed;
         }
 
-        if (x < STAGE_MIN_X || x > STAGE_MAX_X) {
+        if (x < roamMinX || x > roamMaxX) {
           direction = direction === 1 ? -1 : 1;
-          x = clamp(x, STAGE_MIN_X, STAGE_MAX_X);
+          x = clamp(x, roamMinX, roamMaxX);
         }
-        y = clamp(y, STAGE_MIN_Y, STAGE_MAX_Y);
+        y = clamp(y, roamMinY, roamMaxY);
 
         return {
           x,
