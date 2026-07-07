@@ -55,6 +55,9 @@ Casting panel.
 See **[docs/details.md](docs/details.md)** for the controls, the log format, the
 character roster, the project structure, and how the pieces fit together.
 
+For maintainers, **[docs/release.md](docs/release.md)** describes the release
+procedure.
+
 ## Credits
 
 The Miko character (used here as the host, "Boss") is courtesy of Miko (AITuberOnAir):
