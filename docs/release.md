@@ -35,22 +35,11 @@ git push
 
 ## 3. Create the GitHub release
 
-Create the release as a **draft** first — drafts are not publicly visible, send
-no notifications, and create no tag until published, so the notes can be
-reviewed (or the release abandoned) without anyone seeing it:
+Create the tag and the release page in one step:
 
 ```bash
-gh release create vX.Y.Z --draft --title "vX.Y.Z" --notes "..."
+gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."
 ```
-
-Review the draft (`gh release view vX.Y.Z`, or open the printed URL), then
-publish it:
-
-```bash
-gh release edit vX.Y.Z --draft=false
-```
-
-Publishing creates the `vX.Y.Z` tag and makes the release public.
 
 Release notes format (see past releases for examples):
 
