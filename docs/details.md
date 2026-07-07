@@ -49,6 +49,13 @@ The app is a small pipeline from raw log records to an animated stage:
 6. **Render**: `src/components/CharacterActor.tsx` draws each character from a
    spritesheet with idle, walk, and gesture motion. Only the characters used by the
    current log appear (plus the host), and they animate in when a log loads.
+   While idle, each character putters around its own desk following its own
+   motion personality defined in `src/lib/motionPersonality.ts`: walk speed,
+   roam radius, pause rhythm, and preferred gestures (waving, reviewing,
+   jumping, waiting) all differ per character, but everyone stays within a
+   fixed range of their home spot so the stage stays tidy. Custom characters
+   get a personality derived deterministically from their id, so an uploaded
+   character always moves the same way.
 
 All of the above is client-side React state. The only server-side code is the
 optional dev API in `vite.config.ts`, which runs only during `npm run dev`.
@@ -136,6 +143,14 @@ agents, the extras share an actor sprite via a stable name hash; the real agent 
 always shows on the nameplate and bubble, so it stays clear who is speaking. `agmsg`
 teams have no hard size limit, so this keeps any team viewable.
 
+Each character also has its own **motion personality** (`src/lib/motionPersonality.ts`)
+used while idle on stage. Everyone stays within a fixed radius of their own desk,
+and the individuality shows in how they behave there: Haya fidgets and jumps,
+Suzu rarely moves and sinks into long reviews, Kii waves at coworkers a lot,
+Boss makes brisk little rounds of her corner, and so on. Custom characters get a
+personality derived from a hash of their id, so every uploaded character moves in
+its own consistent way.
+
 ## Project structure
 
 ```text
@@ -144,6 +159,7 @@ src/
   App.tsx                     # app shell: stage, controls, log panel, replay engine
   components/CharacterActor.tsx  # character sprite, motion, and speech bubble
   lib/agmsg.ts                # log normalization + agent-to-character mapping + formatting
+  lib/motionPersonality.ts    # per-character ambient motion personalities
   lib/i18n.ts                 # UI strings (en/ja) and language/date helpers
   types.ts                    # shared types
   styles/app.css              # styles (light, simple theme)

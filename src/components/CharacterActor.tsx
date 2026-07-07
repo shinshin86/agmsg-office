@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type AmbientRestAction,
+  type MotionPersonality,
+  getMotionPersonality,
+  pickRestAction,
+} from "../lib/motionPersonality";
 import type { CharacterState, StageCharacter } from "../types";
 
 type PetAction =
@@ -11,8 +17,6 @@ type PetAction =
   | "waiting"
   | "running"
   | "review";
-
-type AmbientRestAction = "idle" | "waving" | "waiting" | "review";
 
 interface CharacterActorProps {
   ambientMotion: boolean;
@@ -45,11 +49,11 @@ const CELL_HEIGHT = 208;
 const ATLAS_COLUMNS = 8;
 const ATLAS_ROWS = 9;
 const MAX_BUBBLE_CHARS = 92;
-const AMBIENT_REST_ACTIONS: readonly AmbientRestAction[] = [
-  "waving",
-  "review",
-  "waiting",
-];
+const BASE_WALK_SPEED = 0.008;
+const STAGE_MIN_X = 5;
+const STAGE_MAX_X = 94;
+const STAGE_MIN_Y = 18;
+const STAGE_MAX_Y = 72;
 
 const SPRITE_ROWS: Record<PetAction, SpriteRow> = {
   idle: { row: 0, frames: 6, frameMs: 320 },
@@ -104,17 +108,15 @@ function getMotionStagger(character: StageCharacter) {
   return (idOffset % 900) + character.entranceDelayMs * 0.45;
 }
 
-function getRandomAmbientRestAction(): AmbientRestAction {
-  if (Math.random() > 0.38) return "idle";
-  return AMBIENT_REST_ACTIONS[
-    Math.floor(Math.random() * AMBIENT_REST_ACTIONS.length)
-  ];
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }
 
 function useActorMotion(
   character: StageCharacter,
   action: PetAction,
   ambientMotionEnabled: boolean,
+  personality: MotionPersonality,
 ) {
   const { x: homeX, y: homeY } = character.position;
   const initialStagger = getMotionStagger(character);
@@ -135,10 +137,15 @@ function useActorMotion(
   const ambientMotionRef = useRef(ambientMotionEnabled);
   const homeRef = useRef(character.position);
   const staggerRef = useRef(initialStagger);
+  const personalityRef = useRef(personality);
 
   useEffect(() => {
     actionRef.current = action;
   }, [action]);
+
+  useEffect(() => {
+    personalityRef.current = personality;
+  }, [personality]);
 
   useEffect(() => {
     ambientMotionRef.current = ambientMotionEnabled;
@@ -161,12 +168,13 @@ function useActorMotion(
         const ambientMoving =
           ambientMotionRef.current && currentAction === "idle";
         const home = homeRef.current;
+        const traits = personalityRef.current;
         const moving =
           ambientMoving ||
           currentAction === "running" ||
           currentAction === "running-left" ||
           currentAction === "running-right";
-        const speed = moving ? 0.008 : 0;
+        const speed = moving ? BASE_WALK_SPEED * traits.speedFactor : 0;
         let direction = current.direction;
         let vx = current.vx;
         let vy = current.vy;
@@ -178,10 +186,10 @@ function useActorMotion(
         let walking = current.walking;
         let restAction = current.restAction;
         let restActionUntil = current.restActionUntil;
-        const minX = Math.max(5, home.x - 12);
-        const maxX = Math.min(94, home.x + 12);
-        const minY = Math.max(18, home.y - 1.2);
-        const maxY = Math.min(72, home.y + 1.2);
+        const roamMinX = Math.max(STAGE_MIN_X, home.x - traits.wanderRangeX);
+        const roamMaxX = Math.min(STAGE_MAX_X, home.x + traits.wanderRangeX);
+        const roamMinY = Math.max(STAGE_MIN_Y, home.y - traits.wanderRangeY);
+        const roamMaxY = Math.min(STAGE_MAX_Y, home.y + traits.wanderRangeY);
 
         if (moving) {
           const distanceX = targetX - x;
@@ -193,25 +201,46 @@ function useActorMotion(
             if (pausedUntil === 0) {
               pausedUntil =
                 now +
-                3200 +
-                Math.random() * 2600 +
+                traits.pauseMsMin +
+                Math.random() * (traits.pauseMsMax - traits.pauseMsMin) +
                 (ambientMoving ? staggerRef.current : 0);
               if (ambientMoving) {
-                restAction = getRandomAmbientRestAction();
+                restAction = pickRestAction(traits.restActionWeights);
                 restActionUntil =
-                  restAction === "idle" ? 0 : now + 1100 + Math.random() * 1400;
+                  restAction === "idle"
+                    ? 0
+                    : now +
+                      traits.restMsMin +
+                      Math.random() * (traits.restMsMax - traits.restMsMin);
               }
             }
             if (restActionUntil > 0 && now > restActionUntil) {
-              restAction = "idle";
-              restActionUntil = 0;
+              const chainGesture =
+                ambientMoving &&
+                now < pausedUntil &&
+                Math.random() < traits.restChainChance;
+              restAction = chainGesture
+                ? pickRestAction(traits.restActionWeights)
+                : "idle";
+              restActionUntil =
+                restAction === "idle"
+                  ? 0
+                  : now +
+                    traits.restMsMin +
+                    Math.random() * (traits.restMsMax - traits.restMsMin);
             }
             if (now > pausedUntil) {
-              const nextX = ambientMoving
-                ? minX + Math.random() * (maxX - minX)
-                : home.x + (Math.random() * 2 - 1) * 5.5;
-              targetX = Math.min(Math.max(nextX, minX), maxX);
-              targetY = home.y;
+              if (ambientMoving) {
+                targetX = roamMinX + Math.random() * (roamMaxX - roamMinX);
+                targetY = roamMinY + Math.random() * (roamMaxY - roamMinY);
+              } else {
+                targetX = clamp(
+                  home.x + (Math.random() * 2 - 1) * 5.5,
+                  roamMinX,
+                  roamMaxX,
+                );
+                targetY = home.y;
+              }
               direction = targetX >= x ? 1 : -1;
               pausedUntil = 0;
               walking = true;
@@ -241,11 +270,11 @@ function useActorMotion(
           y += vy * elapsed;
         }
 
-        if (x < minX || x > maxX) {
+        if (x < roamMinX || x > roamMaxX) {
           direction = direction === 1 ? -1 : 1;
-          x = Math.min(Math.max(x, minX), maxX);
+          x = clamp(x, roamMinX, roamMaxX);
         }
-        y = Math.min(Math.max(y, minY), maxY);
+        y = clamp(y, roamMinY, roamMaxY);
 
         return {
           x,
@@ -301,7 +330,16 @@ export function CharacterActor({
   const baseAction = actionForState(character.state, character.isActiveSpeaker);
   const ambientMotionEnabled =
     ambientMotion && character.state === "idle" && character.richMotion;
-  const motion = useActorMotion(character, baseAction, ambientMotionEnabled);
+  const personality = useMemo(
+    () => getMotionPersonality(character.characterId),
+    [character.characterId],
+  );
+  const motion = useActorMotion(
+    character,
+    baseAction,
+    ambientMotionEnabled,
+    personality,
+  );
   const displayAction = ambientMotionEnabled
     ? motion.walking
       ? "running"
