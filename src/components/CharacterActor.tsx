@@ -42,6 +42,7 @@ interface MotionState {
   walking: boolean;
   restAction: AmbientRestAction;
   restActionUntil: number;
+  speedJitter: number;
 }
 
 const ASSET_BASE = "/assets/";
@@ -106,7 +107,18 @@ function getMotionStagger(character: StageCharacter) {
     (total, value) => total + value.charCodeAt(0),
     0,
   );
-  return (idOffset % 900) + character.entranceDelayMs * 0.45;
+  return ((idOffset * 37) % 2400) + character.entranceDelayMs * 0.45;
+}
+
+function drawPauseMs(traits: MotionPersonality): number {
+  const base =
+    traits.pauseMsMin + Math.random() * (traits.pauseMsMax - traits.pauseMsMin);
+  const roll = Math.random();
+  // Occasional bursts of restlessness and longer lulls keep the office
+  // rhythm irregular, so characters never look synchronized.
+  if (roll < 0.18) return base * 0.35;
+  if (roll > 0.85) return base * 1.9;
+  return base;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -153,6 +165,7 @@ function useActorMotion(
     walking: false,
     restAction: "idle",
     restActionUntil: 0,
+    speedJitter: 1,
   });
   const actionRef = useRef(action);
   const ambientMotionRef = useRef(ambientMotionEnabled);
@@ -195,7 +208,9 @@ function useActorMotion(
           currentAction === "running" ||
           currentAction === "running-left" ||
           currentAction === "running-right";
-        const speed = moving ? BASE_WALK_SPEED * traits.speedFactor : 0;
+        const speed = moving
+          ? BASE_WALK_SPEED * traits.speedFactor * current.speedJitter
+          : 0;
         let direction = current.direction;
         let vx = current.vx;
         let vy = current.vy;
@@ -207,6 +222,7 @@ function useActorMotion(
         let walking = current.walking;
         let restAction = current.restAction;
         let restActionUntil = current.restActionUntil;
+        let speedJitter = current.speedJitter;
         const roamMinX = Math.max(STAGE_MIN_X, home.x - traits.wanderRangeX);
         const roamMaxX = Math.min(STAGE_MAX_X, home.x + traits.wanderRangeX);
         const roamMinY = Math.max(STAGE_MIN_Y, home.y - traits.wanderRangeY);
@@ -222,8 +238,7 @@ function useActorMotion(
             if (pausedUntil === 0) {
               pausedUntil =
                 now +
-                traits.pauseMsMin +
-                Math.random() * (traits.pauseMsMax - traits.pauseMsMin) +
+                drawPauseMs(traits) +
                 (ambientMoving ? staggerRef.current : 0);
               if (ambientMoving) {
                 restAction = pickRestAction(traits.restActionWeights);
@@ -272,6 +287,7 @@ function useActorMotion(
               walking = true;
               restAction = "idle";
               restActionUntil = 0;
+              speedJitter = 0.8 + Math.random() * 0.45;
             }
           } else {
             walking = true;
@@ -314,6 +330,7 @@ function useActorMotion(
           walking,
           restAction,
           restActionUntil,
+          speedJitter,
         };
       });
 
