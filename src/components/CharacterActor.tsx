@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   type AmbientRestAction,
   type MotionPersonality,
+  type MovePattern,
   getMotionPersonality,
   pickRestAction,
 } from "../lib/motionPersonality";
@@ -110,6 +111,26 @@ function getMotionStagger(character: StageCharacter) {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+function pickAmbientTargetX(
+  pattern: MovePattern,
+  x: number,
+  roamMinX: number,
+  roamMaxX: number,
+): number {
+  switch (pattern) {
+    case "patrol": {
+      // Pace to whichever edge of the roam range is farther away.
+      const midpoint = (roamMinX + roamMaxX) / 2;
+      const edge = x > midpoint ? roamMinX : roamMaxX;
+      return clamp(edge + (Math.random() * 2 - 1) * 0.8, roamMinX, roamMaxX);
+    }
+    case "hop":
+      return clamp(x + (Math.random() * 2 - 1) * 4, roamMinX, roamMaxX);
+    default:
+      return roamMinX + Math.random() * (roamMaxX - roamMinX);
+  }
 }
 
 function useActorMotion(
@@ -231,7 +252,12 @@ function useActorMotion(
             }
             if (now > pausedUntil) {
               if (ambientMoving) {
-                targetX = roamMinX + Math.random() * (roamMaxX - roamMinX);
+                targetX = pickAmbientTargetX(
+                  traits.movePattern,
+                  x,
+                  roamMinX,
+                  roamMaxX,
+                );
                 targetY = roamMinY + Math.random() * (roamMaxY - roamMinY);
               } else {
                 targetX = clamp(

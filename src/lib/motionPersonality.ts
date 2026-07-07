@@ -5,16 +5,26 @@ export type AmbientRestAction =
   | "review"
   | "jumping";
 
+/**
+ * How a character picks its next destination inside its roam range.
+ * - "wander": random spots around the desk (the default stroll).
+ * - "patrol": paces edge to edge, back and forth.
+ * - "hop": busy little steps close to where it stands.
+ */
+export type MovePattern = "wander" | "patrol" | "hop";
+
 export interface MotionPersonality {
   /** Multiplier on the base walk speed. 1 = the previous shared pace. */
   speedFactor: number;
-  /** How far (in stage % units) the character roams from home on a stroll. */
+  /** How far (in stage % units) the character roams from home. */
   wanderRangeX: number;
   /** Vertical drift allowed around home (stage % units). */
   wanderRangeY: number;
   /** Pause between strolls, in milliseconds. */
   pauseMsMin: number;
   pauseMsMax: number;
+  /** How the next destination is chosen. */
+  movePattern: MovePattern;
   /** Relative weights for the rest action picked when a stroll ends. */
   restActionWeights: Record<AmbientRestAction, number>;
   /** How long a non-idle rest action plays, in milliseconds. */
@@ -25,166 +35,175 @@ export interface MotionPersonality {
 }
 
 const BUILTIN_PERSONALITIES: Record<string, MotionPersonality> = {
-  // Boss: cheerful, makes lively rounds of her own corner and greets everyone.
+  // Boss: patrols her corner briskly, waving at everyone she passes.
   miko: {
-    speedFactor: 1.15,
+    speedFactor: 1.2,
     wanderRangeX: 10,
     wanderRangeY: 2.5,
-    pauseMsMin: 2200,
-    pauseMsMax: 5200,
+    pauseMsMin: 2000,
+    pauseMsMax: 3600,
+    movePattern: "patrol",
     restActionWeights: {
-      idle: 4,
-      waving: 3,
-      review: 1,
-      waiting: 1,
-      jumping: 1,
-    },
-    restMsMin: 1200,
-    restMsMax: 2600,
-    restChainChance: 0.5,
-  },
-  // Gentle: stays close to her desk, unhurried short strolls.
-  mai: {
-    speedFactor: 0.8,
-    wanderRangeX: 6,
-    wanderRangeY: 1.5,
-    pauseMsMin: 4200,
-    pauseMsMax: 8000,
-    restActionWeights: {
-      idle: 6,
-      waving: 2,
-      review: 1,
-      waiting: 2,
-      jumping: 0,
-    },
-    restMsMin: 1400,
-    restMsMax: 2600,
-    restChainChance: 0.3,
-  },
-  // Lively: fidgety around her desk, jumps when pleased.
-  haya: {
-    speedFactor: 1.45,
-    wanderRangeX: 9,
-    wanderRangeY: 2.5,
-    pauseMsMin: 1400,
-    pauseMsMax: 3200,
-    restActionWeights: {
-      idle: 3,
-      waving: 2,
+      idle: 2,
+      waving: 5,
       review: 1,
       waiting: 0.5,
-      jumping: 3,
+      jumping: 1,
     },
-    restMsMin: 900,
-    restMsMax: 1800,
-    restChainChance: 0.65,
+    restMsMin: 1600,
+    restMsMax: 3000,
+    restChainChance: 0.5,
   },
-  // Calm: rarely leaves her spot, sinks into long reviews.
-  suzu: {
+  // Gentle: mostly stands quietly by her desk, the occasional slow drift.
+  mai: {
     speedFactor: 0.7,
-    wanderRangeX: 4,
-    wanderRangeY: 1,
-    pauseMsMin: 5200,
-    pauseMsMax: 9600,
+    wanderRangeX: 5,
+    wanderRangeY: 1.5,
+    pauseMsMin: 6000,
+    pauseMsMax: 10000,
+    movePattern: "wander",
     restActionWeights: {
-      idle: 5,
-      waving: 0.5,
-      review: 3,
+      idle: 6,
+      waving: 1.5,
+      review: 0.5,
       waiting: 2,
       jumping: 0,
     },
-    restMsMin: 1800,
-    restMsMax: 3400,
-    restChainChance: 0.35,
+    restMsMin: 1600,
+    restMsMax: 2800,
+    restChainChance: 0.25,
   },
-  // Friendly: easy pace around her desk, waves at coworkers a lot.
+  // Lively: constant busy little hops, jumps all the time.
+  haya: {
+    speedFactor: 1.7,
+    wanderRangeX: 8,
+    wanderRangeY: 2.5,
+    pauseMsMin: 700,
+    pauseMsMax: 1600,
+    movePattern: "hop",
+    restActionWeights: {
+      idle: 2,
+      waving: 1.5,
+      review: 0.5,
+      waiting: 0.5,
+      jumping: 5,
+    },
+    restMsMin: 900,
+    restMsMax: 1600,
+    restChainChance: 0.7,
+  },
+  // Calm: practically a statue, sunk deep into long reviews.
+  suzu: {
+    speedFactor: 0.55,
+    wanderRangeX: 2.5,
+    wanderRangeY: 0.8,
+    pauseMsMin: 9000,
+    pauseMsMax: 16000,
+    movePattern: "wander",
+    restActionWeights: {
+      idle: 2,
+      waving: 0.3,
+      review: 6,
+      waiting: 1.5,
+      jumping: 0,
+    },
+    restMsMin: 3000,
+    restMsMax: 6000,
+    restChainChance: 0.5,
+  },
+  // Friendly: strolls around and waves at coworkers constantly.
   kii: {
     speedFactor: 1,
     wanderRangeX: 8,
     wanderRangeY: 2,
-    pauseMsMin: 2600,
-    pauseMsMax: 5600,
+    pauseMsMin: 2400,
+    pauseMsMax: 4800,
+    movePattern: "wander",
     restActionWeights: {
-      idle: 4,
-      waving: 4,
-      review: 1,
+      idle: 2.5,
+      waving: 6,
+      review: 0.5,
       waiting: 1,
       jumping: 0.5,
     },
-    restMsMin: 1200,
-    restMsMax: 2400,
-    restChainChance: 0.55,
+    restMsMin: 1600,
+    restMsMax: 3000,
+    restChainChance: 0.6,
   },
-  // Bright: quick on her feet, upbeat little hops between errands.
+  // Bright: quick fidgety steps with upbeat hops and waves.
   rin: {
-    speedFactor: 1.25,
-    wanderRangeX: 8.5,
+    speedFactor: 1.4,
+    wanderRangeX: 7,
     wanderRangeY: 2,
-    pauseMsMin: 1800,
-    pauseMsMax: 4200,
+    pauseMsMin: 1200,
+    pauseMsMax: 2600,
+    movePattern: "hop",
     restActionWeights: {
-      idle: 3,
-      waving: 3,
+      idle: 2,
+      waving: 3.5,
       review: 0.5,
       waiting: 0.5,
-      jumping: 2,
+      jumping: 3.5,
     },
     restMsMin: 1000,
     restMsMax: 2000,
     restChainChance: 0.6,
   },
-  // Composed: deliberate walks, often pauses to review her notes.
+  // Composed: barely walks, settles into long deliberate reviews.
   nao: {
-    speedFactor: 0.9,
-    wanderRangeX: 7,
+    speedFactor: 0.8,
+    wanderRangeX: 5,
     wanderRangeY: 1.5,
-    pauseMsMin: 3600,
-    pauseMsMax: 7000,
+    pauseMsMin: 4800,
+    pauseMsMax: 8400,
+    movePattern: "wander",
     restActionWeights: {
-      idle: 4,
+      idle: 2,
       waving: 0.5,
-      review: 4,
+      review: 6,
       waiting: 1.5,
       jumping: 0,
     },
-    restMsMin: 1600,
-    restMsMax: 3000,
+    restMsMin: 2400,
+    restMsMax: 4200,
+    restChainChance: 0.5,
+  },
+  // Warm: relaxed drifts, often just waits with a patient smile.
+  mio: {
+    speedFactor: 0.75,
+    wanderRangeX: 6,
+    wanderRangeY: 1.8,
+    pauseMsMin: 3600,
+    pauseMsMax: 7000,
+    movePattern: "wander",
+    restActionWeights: {
+      idle: 3,
+      waving: 2,
+      review: 0.5,
+      waiting: 4.5,
+      jumping: 0,
+    },
+    restMsMin: 2000,
+    restMsMax: 3600,
     restChainChance: 0.45,
   },
-  // Warm: relaxed strolls around her own corner of the office.
-  mio: {
-    speedFactor: 0.85,
-    wanderRangeX: 6.5,
-    wanderRangeY: 1.8,
-    pauseMsMin: 3000,
-    pauseMsMax: 6400,
-    restActionWeights: {
-      idle: 5,
-      waving: 2.5,
-      review: 1,
-      waiting: 2,
-      jumping: 0,
-    },
-    restMsMin: 1400,
-    restMsMax: 2600,
-    restChainChance: 0.4,
-  },
-  // Steady: keeps a regular rhythm, methodical rounds of her area.
+  // Steady: methodically paces her area end to end, checking as she goes.
   sora: {
-    speedFactor: 0.95,
+    speedFactor: 0.9,
     wanderRangeX: 7.5,
     wanderRangeY: 1.2,
-    pauseMsMin: 3200,
-    pauseMsMax: 6000,
+    pauseMsMin: 3000,
+    pauseMsMax: 5000,
+    movePattern: "patrol",
     restActionWeights: {
-      idle: 4,
-      waving: 1,
-      review: 2.5,
-      waiting: 2,
+      idle: 2,
+      waving: 0.5,
+      review: 4,
+      waiting: 2.5,
       jumping: 0,
     },
-    restMsMin: 1400,
-    restMsMax: 2600,
+    restMsMin: 1800,
+    restMsMax: 3200,
     restChainChance: 0.4,
   },
 };
@@ -212,31 +231,52 @@ export function pickRestAction(
   return "idle";
 }
 
+const DERIVED_MOVE_PATTERNS: readonly MovePattern[] = [
+  "wander",
+  "wander",
+  "patrol",
+  "hop",
+];
+
 /**
  * Custom characters get a personality derived from their id, so every
  * uploaded character moves in its own consistent way across sessions.
  */
 function derivePersonality(characterId: string): MotionPersonality {
   const random = createSeededRandom(hashString(characterId));
-  const pauseMsMin = 1600 + random() * 3200;
+  const pauseMsMin = 1200 + random() * 6000;
+  const signature = pickSignatureGesture(random());
 
   return {
-    speedFactor: 0.75 + random() * 0.65,
-    wanderRangeX: 4 + random() * 6,
-    wanderRangeY: 1 + random() * 1.5,
+    speedFactor: 0.6 + random() * 1,
+    wanderRangeX: 3 + random() * 7,
+    wanderRangeY: 0.8 + random() * 1.7,
     pauseMsMin,
-    pauseMsMax: pauseMsMin + 1800 + random() * 3000,
+    pauseMsMax: pauseMsMin + 1400 + random() * 4200,
+    movePattern:
+      DERIVED_MOVE_PATTERNS[
+        Math.floor(random() * DERIVED_MOVE_PATTERNS.length)
+      ],
     restActionWeights: {
-      idle: 3 + random() * 3,
-      waving: random() * 3,
-      review: random() * 3,
-      waiting: random() * 2,
-      jumping: random() * 2,
+      idle: 2 + random() * 2,
+      waving: (signature === "waving" ? 4 : 0.5) + random(),
+      review: (signature === "review" ? 4 : 0.5) + random(),
+      waiting: (signature === "waiting" ? 4 : 0.5) + random(),
+      jumping: (signature === "jumping" ? 4 : 0) + random() * 0.5,
     },
-    restMsMin: 1000 + random() * 800,
-    restMsMax: 2000 + random() * 1400,
-    restChainChance: 0.3 + random() * 0.35,
+    restMsMin: 1200 + random() * 1400,
+    restMsMax: 2600 + random() * 2400,
+    restChainChance: 0.3 + random() * 0.4,
   };
+}
+
+function pickSignatureGesture(
+  roll: number,
+): Exclude<AmbientRestAction, "idle"> {
+  if (roll < 0.25) return "waving";
+  if (roll < 0.5) return "review";
+  if (roll < 0.75) return "waiting";
+  return "jumping";
 }
 
 function hashString(value: string): number {
