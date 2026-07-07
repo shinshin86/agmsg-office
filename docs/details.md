@@ -50,11 +50,12 @@ The app is a small pipeline from raw log records to an animated stage:
    spritesheet with idle, walk, and gesture motion. Only the characters used by the
    current log appear (plus the host), and they animate in when a log loads.
    While idle, each character putters around its own desk following its own
-   motion personality defined in `src/lib/motionPersonality.ts`: walk speed,
-   roam radius, pause rhythm, and preferred gestures (waving, reviewing,
-   jumping, waiting) all differ per character, but everyone stays within a
-   fixed range of their home spot so the stage stays tidy. Custom characters
-   get a personality derived deterministically from their id, so an uploaded
+   motion personality defined in `src/lib/motionPersonality.ts`: a movement
+   pattern (pacing edge to edge, busy little hops, or random wandering), walk
+   speed, pause rhythm, and a signature gesture (waving, reviewing, jumping,
+   or waiting) all differ per character, but everyone stays within a fixed
+   range of their home spot so the stage stays tidy. Custom characters get a
+   personality derived deterministically from their id, so an uploaded
    character always moves the same way.
 
 All of the above is client-side React state. The only server-side code is the
@@ -145,11 +146,13 @@ teams have no hard size limit, so this keeps any team viewable.
 
 Each character also has its own **motion personality** (`src/lib/motionPersonality.ts`)
 used while idle on stage. Everyone stays within a fixed radius of their own desk,
-and the individuality shows in how they behave there: Haya fidgets and jumps,
-Suzu rarely moves and sinks into long reviews, Kii waves at coworkers a lot,
-Boss makes brisk little rounds of her corner, and so on. Custom characters get a
-personality derived from a hash of their id, so every uploaded character moves in
-its own consistent way.
+and the individuality shows in how they behave there: Boss and Sora pace their
+areas end to end, Haya and Rin hop around busily and jump a lot, Suzu is nearly
+a statue sunk into long reviews, Kii waves at coworkers constantly, Mio patiently
+waits, and so on. Each character leans heavily on its own signature gesture, so
+the cast reads differently at a glance. Custom characters get a personality
+derived from a hash of their id — including a movement pattern and a signature
+gesture — so every uploaded character moves in its own consistent way.
 
 ## Project structure
 
