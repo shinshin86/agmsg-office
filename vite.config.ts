@@ -529,13 +529,9 @@ function errorStatusCode(error: unknown): number {
 
 async function handleTeamsRequest(res: ServerResponse) {
   try {
-    const teamNames = await readAgmsgTeamNames();
-    const teams = await Promise.all(
-      teamNames.map(async (teamName) => ({
-        name: teamName,
-        agents: parseTeamAgents(await runAgmsgScript("team.sh", [teamName])),
-      })),
-    );
+    const teams = hasAgmsgApi()
+      ? await readAgmsgTeamsFromApi()
+      : await readAgmsgTeamsFromScripts();
 
     sendJson(res, {
       source: "agmsg",
@@ -544,6 +540,54 @@ async function handleTeamsRequest(res: ServerResponse) {
   } catch {
     sendFallbackTeams(res);
   }
+}
+
+async function readAgmsgTeamsFromApi(): Promise<
+  { name: string; agents: string[] }[]
+> {
+  const teamNames = parseApiNames(
+    await runAgmsgScript("api.sh", ["get", "teams"]),
+  ).sort((left, right) => left.localeCompare(right));
+  return Promise.all(
+    teamNames.map(async (teamName) => ({
+      name: teamName,
+      agents: parseApiNames(
+        await runAgmsgScript("api.sh", ["get", "teams", teamName, "members"]),
+      ),
+    })),
+  );
+}
+
+// Installs older than agmsg 1.1.4 have no api.sh. team.sh is a display
+// command, and newer releases make it slow, so it is used only here.
+async function readAgmsgTeamsFromScripts(): Promise<
+  { name: string; agents: string[] }[]
+> {
+  const teamNames = await readAgmsgTeamNames();
+  return Promise.all(
+    teamNames.map(async (teamName) => ({
+      name: teamName,
+      agents: parseTeamAgents(await runAgmsgScript("team.sh", [teamName])),
+    })),
+  );
+}
+
+function parseApiNames(output: string): string[] {
+  return parseJsonLines(output)
+    .map((record) => record.name)
+    .filter((name): name is string => typeof name === "string" && name !== "");
+}
+
+function parseJsonLines(output: string): Record<string, unknown>[] {
+  return output
+    .split("\n")
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line) as unknown)
+    .filter(isRecord);
+}
+
+function hasAgmsgApi(): boolean {
+  return existsSync(join(AGMSG_SCRIPT_DIR, "api.sh"));
 }
 
 async function readAgmsgTeamNames(): Promise<string[]> {
@@ -564,19 +608,50 @@ async function handleHistoryRequest(req: IncomingMessage, res: ServerResponse) {
       return;
     }
 
-    const output = await runAgmsgScript("history.sh", [
-      team,
-      "",
-      String(limit),
-    ]);
     sendJson(res, {
       source: "agmsg",
       team,
-      entries: parseHistory(output, team),
+      entries: await readAgmsgHistory(team, limit),
     });
   } catch {
     await sendFallbackHistory(res);
   }
+}
+
+// agmsg 1.1.4+ ships api.sh, a JSON read API meant to stay stable across
+// releases. Older installs only have history.sh, whose text output is a
+// display format, so it is kept as a fallback.
+async function readAgmsgHistory(
+  team: string,
+  limit: number,
+): Promise<RawAgmsgRecord[]> {
+  if (hasAgmsgApi()) {
+    const output = await runAgmsgScript("api.sh", [
+      "get",
+      "teams",
+      team,
+      "messages",
+      "--limit",
+      String(limit),
+    ]);
+    return parseApiMessages(output, team);
+  }
+
+  const output = await runAgmsgScript("history.sh", [team, "", String(limit)]);
+  return parseHistory(output, team);
+}
+
+function parseApiMessages(output: string, team: string): RawAgmsgRecord[] {
+  return parseJsonLines(output)
+    .filter((record) => record.type === "message_sent")
+    .map((record) => ({
+      id: String(record.id),
+      team: typeof record.team === "string" ? record.team : team,
+      from_agent: String(record.from),
+      to_agent: String(record.to),
+      body: String(record.body ?? ""),
+      created_at: String(record.at),
+    }));
 }
 
 function runAgmsgScript(scriptName: string, args: string[]): Promise<string> {
