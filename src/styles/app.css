@@ -315,7 +315,7 @@ input[type="file"]::file-selector-button:hover {
   bottom: calc(100% - 6px);
   left: 50%;
   width: min(320px, 78vw);
-  transform: translateX(-50%);
+  transform: translate(-50%, var(--bubble-shift, 0px));
   pointer-events: none;
 }
 
@@ -385,7 +385,7 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .slot-host .speech-bubble {
-  transform: translateX(-18px);
+  transform: translate(-18px, var(--bubble-shift, 0px));
 }
 
 .slot-host .speech-bubble::after {
