@@ -315,6 +315,7 @@ input[type="file"]::file-selector-button:hover {
   bottom: calc(100% - 6px);
   left: 50%;
   width: min(320px, 78vw);
+  z-index: 1;
   transform: translate(-50%, var(--bubble-shift, 0px));
   pointer-events: none;
 }
