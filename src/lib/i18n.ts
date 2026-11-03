@@ -90,6 +90,7 @@ export const STRINGS = {
     theater: "Theater",
     theaterExit: "Exit theater",
     topbarSubtitle: "Replay agent messages as a character stage.",
+    addonWaiting: "Waiting for messages from the agmsg app...",
     addonLiveNotice: "New messages play automatically as they arrive.",
     castingAddonNotice: "Casting changes last only while this pane is open.",
     unknown: "unknown",
@@ -180,6 +181,7 @@ export const STRINGS = {
     stageLabel: "エージェントステージ",
     theater: "シアター",
     theaterExit: "シアター解除",
+    addonWaiting: "agmsg アプリからのメッセージを待っています...",
     addonLiveNotice: "新しいメッセージは届くと自動で再生されます。",
     castingAddonNotice: "配役の変更は、このペインを開いている間だけ有効です。",
     topbarSubtitle:

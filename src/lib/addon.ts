@@ -14,22 +14,40 @@ export interface AddonHandlers {
 }
 
 let handlers: AddonHandlers | undefined;
-let connected = false;
+let pendingInit: AddonInit | undefined;
+let pendingMessages: AddonMessage[] = [];
 
-// The kit's connect() has no teardown, so it runs once per page and forwards to
-// whichever handlers the app registered last.
-export function connectAddon(nextHandlers: AddonHandlers): void {
-  handlers = nextHandlers;
-  if (connected) return;
-  connected = true;
+// The app posts the port right after the frame's load event, which can come
+// before React has rendered, so listening must start when this module loads.
+// What arrives before the app registers its handlers waits here.
+if (IS_ADDON) {
   connect({
-    // The app hands over the port only after the frame's load event, which can
-    // take more than the kit's one-second sample timeout because of our assets.
-    // Falling back to sample data would discard the real port.
+    // Falling back to sample data would discard a port that arrives later.
     sample: import.meta.env.DEV,
-    onInit: (init) => handlers?.onInit(init),
-    onMessage: (message) => handlers?.onMessage(message),
+    onInit: (init) => {
+      if (handlers) {
+        handlers.onInit(init);
+        return;
+      }
+      pendingInit = init;
+      pendingMessages = [];
+    },
+    onMessage: (message) => {
+      if (handlers) {
+        handlers.onMessage(message);
+        return;
+      }
+      pendingMessages.push(message);
+    },
   });
+}
+
+export function registerAddonHandlers(nextHandlers: AddonHandlers): void {
+  handlers = nextHandlers;
+  if (pendingInit) handlers.onInit(pendingInit);
+  for (const message of pendingMessages) handlers.onMessage(message);
+  pendingInit = undefined;
+  pendingMessages = [];
 }
 
 export function toRawRecord(message: AddonMessage): RawAgmsgRecord {

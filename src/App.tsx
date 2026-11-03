@@ -8,7 +8,7 @@ import {
 } from "react";
 import { CastingPanel } from "./components/CastingPanel";
 import { CharacterActor } from "./components/CharacterActor";
-import { IS_ADDON, connectAddon, toRawRecord } from "./lib/addon";
+import { IS_ADDON, registerAddonHandlers, toRawRecord } from "./lib/addon";
 import {
   createAgentCharacterMap,
   formatClock,
@@ -373,7 +373,7 @@ function App() {
   useEffect(() => {
     if (!IS_ADDON) return;
 
-    connectAddon({
+    registerAddonHandlers({
       onInit: ({ team, members, messages }) => {
         resetPlayback();
         setEntries(
@@ -692,14 +692,16 @@ function App() {
               </label>
             )}
             <p className="meta-text">
-              {formatSourceStatus({
-                entriesCount: entries.length,
-                importedFileName,
-                loading: logLoading,
-                logSource,
-                selectedTeam,
-                t,
-              })}
+              {IS_ADDON && !selectedTeam
+                ? t("addonWaiting")
+                : formatSourceStatus({
+                    entriesCount: entries.length,
+                    importedFileName,
+                    loading: logLoading,
+                    logSource,
+                    selectedTeam,
+                    t,
+                  })}
             </p>
             {logSource === "agmsg" && teams.length > 0 && (
               <p className="meta-text">
