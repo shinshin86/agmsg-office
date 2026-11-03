@@ -1,0 +1,83 @@
+[
+  {
+    "id": 1,
+    "team": "product-studio",
+    "from_agent": "lead",
+    "to_agent": "planner",
+    "body": "Let's plan the CSV export feature for the reports page. Can you break it into tasks?",
+    "created_at": "2026-06-24T00:00:00Z",
+    "read_at": "2026-06-24T00:00:06Z"
+  },
+  {
+    "id": 2,
+    "team": "product-studio",
+    "from_agent": "planner",
+    "to_agent": "design",
+    "body": "Tasks: an export button, a loading state, and a success toast. Design, where should the button sit?",
+    "created_at": "2026-06-24T00:03:00Z",
+    "read_at": "2026-06-24T00:03:12Z"
+  },
+  {
+    "id": 3,
+    "team": "product-studio",
+    "from_agent": "design",
+    "to_agent": "dev",
+    "body": "Put the Export button at the top-right of the reports toolbar, with a spinner while the file is generated.",
+    "created_at": "2026-06-24T00:06:00Z",
+    "read_at": null
+  },
+  {
+    "id": 4,
+    "team": "product-studio",
+    "from_agent": "dev",
+    "to_agent": "reviewer",
+    "body": "I implemented the export endpoint and the button. The PR is up. Could you review the streaming logic?",
+    "created_at": "2026-06-24T00:10:00Z",
+    "read_at": "2026-06-24T00:10:18Z"
+  },
+  {
+    "id": 5,
+    "team": "product-studio",
+    "from_agent": "reviewer",
+    "to_agent": "qa",
+    "body": "Looks good. I just renamed one helper. QA, please test exporting a large report and an empty one.",
+    "created_at": "2026-06-24T00:14:00Z",
+    "read_at": null
+  },
+  {
+    "id": 6,
+    "team": "product-studio",
+    "from_agent": "qa",
+    "to_agent": "ops",
+    "body": "Both cases pass. The empty report exports a header-only file. Ops, can we enable it on staging?",
+    "created_at": "2026-06-24T00:18:00Z",
+    "read_at": "2026-06-24T00:18:22Z"
+  },
+  {
+    "id": 7,
+    "team": "product-studio",
+    "from_agent": "ops",
+    "to_agent": "docs",
+    "body": "Enabled it on staging. Docs, could you add a short how-to for the export button?",
+    "created_at": "2026-06-24T00:20:00Z",
+    "read_at": null
+  },
+  {
+    "id": 8,
+    "team": "product-studio",
+    "from_agent": "docs",
+    "to_agent": "lead",
+    "body": "I documented the export button and added a short how-to to the user guide.",
+    "created_at": "2026-06-24T00:23:00Z",
+    "read_at": "2026-06-24T00:23:30Z"
+  },
+  {
+    "id": 9,
+    "team": "product-studio",
+    "from_agent": "lead",
+    "to_agent": "planner",
+    "body": "Thanks, everyone. CSV export is ready to ship in the next release.",
+    "created_at": "2026-06-24T00:27:00Z",
+    "read_at": null
+  }
+]

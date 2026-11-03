@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   type AmbientRestAction,
   type MotionPersonality,
@@ -6,7 +6,10 @@ import {
   getMotionPersonality,
   pickRestAction,
 } from "../lib/motionPersonality";
+import { ASSET_BASE } from "../lib/paths";
 import type { CharacterState, StageCharacter } from "../types";
+
+const BUBBLE_STAGE_MARGIN = 6;
 
 type PetAction =
   | "idle"
@@ -45,7 +48,6 @@ interface MotionState {
   speedJitter: number;
 }
 
-const ASSET_BASE = "/assets/";
 const CELL_WIDTH = 192;
 const CELL_HEIGHT = 208;
 const ATLAS_COLUMNS = 8;
@@ -366,6 +368,38 @@ function truncateText(value: string, maxLength: number): string {
   return `${value.slice(0, maxLength)}...`;
 }
 
+// Shifts the bubble back inside the stage when a short stage would clip it, so
+// the speaker's name and the start of the line stay readable.
+function useBubbleInsideStage(line: string, characterY: number) {
+  const bubbleRef = useRef<HTMLDivElement>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: line and characterY change where the bubble sits.
+  useLayoutEffect(() => {
+    const bubble = bubbleRef.current;
+    const stage = bubble?.closest(".stage-background");
+    if (!bubble || !stage) return;
+
+    const placeBubble = () => {
+      bubble.style.setProperty("--bubble-shift", "0px");
+      const bubbleRect = bubble.getBoundingClientRect();
+      const stageRect = stage.getBoundingClientRect();
+      const clippedAbove = stageRect.top + BUBBLE_STAGE_MARGIN - bubbleRect.top;
+      const clippedBelow =
+        bubbleRect.bottom - stageRect.bottom + BUBBLE_STAGE_MARGIN;
+      const shift =
+        clippedAbove > 0 ? clippedAbove : clippedBelow > 0 ? -clippedBelow : 0;
+      bubble.style.setProperty("--bubble-shift", `${shift}px`);
+    };
+
+    placeBubble();
+    const observer = new ResizeObserver(placeBubble);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [line, characterY]);
+
+  return bubbleRef;
+}
+
 export function CharacterActor({
   ambientMotion,
   character,
@@ -400,6 +434,7 @@ export function CharacterActor({
     ? truncateText(character.currentLine, MAX_BUBBLE_CHARS)
     : "";
   const bubbleBelow = character.position.y < 50;
+  const bubbleRef = useBubbleInsideStage(line, motion.y);
 
   return (
     <div
@@ -416,7 +451,7 @@ export function CharacterActor({
         style={{ animationDelay: `${character.entranceDelayMs}ms` }}
       >
         {line && (
-          <div className="speech-bubble">
+          <div className="speech-bubble" ref={bubbleRef}>
             <strong>{character.displayName}</strong>
             <span>{line}</span>
           </div>

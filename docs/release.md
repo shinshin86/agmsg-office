@@ -27,9 +27,12 @@ npm install --package-lock-only
 
 npm run lint
 npm run build
+# rebuild the desktop app add-on, which is committed under app-panes/
+npm run build:addon
 
-git add package.json package-lock.json
+git add package.json package-lock.json app-panes
 git commit -m "Bump version to X.Y.Z"
+npm run check:addon
 git push
 ```
 

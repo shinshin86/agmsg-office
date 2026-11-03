@@ -88,9 +88,53 @@ interface CharacterUploadPayload {
   portrait?: UploadedFilePayload;
 }
 
-export default defineConfig({
-  plugins: [react(), agmsgDevApiPlugin()],
+export default defineConfig(({ mode }) => {
+  const isAddon = mode === "addon";
+  return {
+    base: isAddon ? "./" : "/",
+    build: isAddon ? { outDir: "dist-addon" } : undefined,
+    plugins: [
+      react(),
+      agmsgDevApiPlugin(),
+      ...(isAddon ? [excludeLocalFilesPlugin()] : []),
+    ],
+  };
 });
+
+// public/ also holds files that are local to this machine and not in git, such
+// as uploaded characters and source art. The add-on build commits its output,
+// so they must not be copied into it.
+function excludeLocalFilesPlugin(): Plugin {
+  let outDir = "";
+  return {
+    name: "agmsg-office-exclude-local-files",
+    apply: "build",
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    async closeBundle() {
+      await rm(join(outDir, "assets/characters/custom"), {
+        recursive: true,
+        force: true,
+      });
+      const entries = await readdir(outDir, {
+        recursive: true,
+        withFileTypes: true,
+      });
+      await Promise.all(
+        entries
+          .filter(
+            (entry) =>
+              entry.isFile() &&
+              (entry.name === ".DS_Store" ||
+                entry.name === ".gitignore" ||
+                entry.name.endsWith("-source.png")),
+          )
+          .map((entry) => rm(join(entry.parentPath, entry.name))),
+      );
+    },
+  };
+}
 
 function agmsgDevApiPlugin(): Plugin {
   return {

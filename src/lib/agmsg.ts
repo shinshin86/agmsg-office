@@ -80,7 +80,9 @@ function compareAgmsgEntries(left: AgmsgEntry, right: AgmsgEntry): number {
   if (Number.isFinite(leftId) && Number.isFinite(rightId)) {
     return leftId - rightId;
   }
-  return left.id.localeCompare(right.id, undefined, { numeric: true });
+  // UUID ids carry no order within a second. The sort is stable, so messages
+  // from the same second keep the order agmsg returned them in.
+  return left.createdAt.localeCompare(right.createdAt);
 }
 
 function toIsoString(value: string): string {

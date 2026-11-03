@@ -1,7 +1,16 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "files": {
-    "ignore": [".claude", "dist", "node_modules"]
+    "ignore": [
+      ".claude",
+      "app-panes",
+      "dist",
+      "dist-addon",
+      "node_modules",
+      "scripts/agmsg-addon-check.cjs",
+      "scripts/agmsg-addon-copy.mjs",
+      "src/vendor"
+    ]
   },
   "formatter": {
     "enabled": true,

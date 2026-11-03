@@ -8,6 +8,7 @@ import {
 } from "react";
 import { CastingPanel } from "./components/CastingPanel";
 import { CharacterActor } from "./components/CharacterActor";
+import { IS_ADDON, registerAddonHandlers, toRawRecord } from "./lib/addon";
 import {
   createAgentCharacterMap,
   formatClock,
@@ -39,6 +40,7 @@ import {
   saveShowDate,
   t as translateString,
 } from "./lib/i18n";
+import { ASSET_BASE, BASE_PATH } from "./lib/paths";
 import type {
   AgentCharacterMap,
   AgmsgEntry,
@@ -54,13 +56,14 @@ import type {
 } from "./types";
 import "./styles/app.css";
 
-const ASSET_BASE = "/assets/";
 const SAMPLE_LOG_URLS: Record<Language, string> = {
-  en: "/sample/agmsg-sample.json",
-  ja: "/sample/agmsg-sample.ja.json",
+  en: `${BASE_PATH}sample/agmsg-sample.json`,
+  ja: `${BASE_PATH}sample/agmsg-sample.ja.json`,
 };
 
 const REPLAY_DELAY_BASE_MS = 2600;
+const ADDON_INITIAL_ENTRIES = 80;
+const ADDON_MAX_ENTRIES = 500;
 
 type AgmsgTeamsResponse = {
   teams: AgmsgTeamSummary[];
@@ -129,7 +132,9 @@ function App() {
   const [loadError, setLoadError] = useState("");
   const [agmsgError, setAgmsgError] = useState("");
   const [castKey, setCastKey] = useState(0);
+  const [liveQueueVersion, setLiveQueueVersion] = useState(0);
   const runIdRef = useRef(0);
+  const liveQueueRef = useRef<string[]>([]);
   const initialLanguageRef = useRef(language);
   const activeLogEntryRef = useRef<HTMLButtonElement | null>(null);
   const t = useCallback(
@@ -206,6 +211,7 @@ function App() {
 
   const resetPlayback = useCallback(() => {
     runIdRef.current += 1;
+    liveQueueRef.current = [];
     setPlaybackStatus("idle");
     setActiveEntryId(undefined);
     setHostAnnouncement(undefined);
@@ -326,6 +332,8 @@ function App() {
         setAssetsManifest(nextAssets);
         setCharacterAssets(mergedCharacters);
 
+        if (IS_ADDON) return;
+
         const rawRecords = await fetchSampleLog(initialLanguageRef.current);
         if (!active) return;
         setEntries(normalizeAgmsgRecords(rawRecords));
@@ -361,6 +369,63 @@ function App() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!IS_ADDON) return;
+
+    registerAddonHandlers({
+      onInit: ({ team, members, messages }) => {
+        resetPlayback();
+        setEntries(
+          normalizeAgmsgRecords(
+            messages.slice(-ADDON_INITIAL_ENTRIES).map(toRawRecord),
+          ),
+        );
+        setCastKey((value) => value + 1);
+        setSelectedTeam(team);
+        setTeams([
+          { name: team, agents: members.map((member) => member.name) },
+        ]);
+        setLogSource("agmsg");
+      },
+      onMessage: (message) => {
+        const entry = normalizeAgmsgRecords([toRawRecord(message)])[0];
+        if (!entry) return;
+        setEntries((current) =>
+          current.some((item) => item.id === entry.id)
+            ? current
+            : [...current, entry].slice(-ADDON_MAX_ENTRIES),
+        );
+        liveQueueRef.current.push(entry.id);
+        setLiveQueueVersion((value) => value + 1);
+      },
+    });
+  }, [resetPlayback]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: liveQueueVersion signals that the ref-held queue changed.
+  useEffect(() => {
+    if (playbackStatus !== "idle" || liveQueueRef.current.length === 0) return;
+
+    const runId = runIdRef.current + 1;
+    runIdRef.current = runId;
+    setPlaybackStatus("playing");
+    setHostAnnouncement(undefined);
+
+    void (async () => {
+      for (
+        let entryId = liveQueueRef.current.shift();
+        entryId;
+        entryId = liveQueueRef.current.shift()
+      ) {
+        if (runIdRef.current !== runId) return;
+        setActiveEntryId(entryId);
+        await sleep(REPLAY_DELAY_BASE_MS / speed);
+      }
+      if (runIdRef.current !== runId) return;
+      setPlaybackStatus("idle");
+      setActiveEntryId(undefined);
+    })();
+  }, [liveQueueVersion, playbackStatus, speed]);
 
   const stopReplay = useCallback(() => {
     resetPlayback();
@@ -405,6 +470,7 @@ function App() {
 
     const runId = runIdRef.current + 1;
     runIdRef.current = runId;
+    liveQueueRef.current = [];
     setPlaybackStatus("playing");
     setActiveEntryId(undefined);
 
@@ -440,11 +506,27 @@ function App() {
 
   useEffect(() => {
     if (!activeEntryId) return;
-    activeLogEntryRef.current?.scrollIntoView({
-      block: "nearest",
-      behavior: "smooth",
-    });
+    // Scroll only the log list, so the stage stays in view when it shares a
+    // scrolling page with the log.
+    const entry = activeLogEntryRef.current;
+    const list = entry?.closest(".log-list");
+    if (!entry || !list) return;
+    const entryRect = entry.getBoundingClientRect();
+    const listRect = list.getBoundingClientRect();
+    const headingHeight = list.querySelector("h2")?.offsetHeight ?? 0;
+    const hiddenAbove = listRect.top + headingHeight - entryRect.top;
+    const hiddenBelow = entryRect.bottom - listRect.bottom;
+    if (hiddenAbove > 0) {
+      list.scrollBy({ top: -hiddenAbove, behavior: "smooth" });
+    } else if (hiddenBelow > 0) {
+      list.scrollBy({ top: hiddenBelow, behavior: "smooth" });
+    }
   }, [activeEntryId]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: theaterMode is the trigger; the layout height changes when it flips.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [theaterMode]);
 
   const updateCharacterConfig = useCallback(
     (updater: (config: CharacterConfig) => CharacterConfig) => {
@@ -585,37 +667,41 @@ function App() {
         <aside className="side-panel">
           <section className="controls-section">
             <h2>{t("source")}</h2>
-            <label>
-              {t("source")}
-              <select
-                disabled={logLoading}
-                value={logSource === "agmsg" ? selectedTeam : ""}
-                onChange={(event) => {
-                  const teamName = event.target.value;
-                  if (teamName) {
-                    void loadAgmsgTeam(teamName);
-                  } else {
-                    void loadSampleLog();
-                  }
-                }}
-              >
-                <option value="">{t("sourceSampleOption")}</option>
-                {teams.map((team) => (
-                  <option key={team.name} value={team.name}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {!IS_ADDON && (
+              <label>
+                {t("source")}
+                <select
+                  disabled={logLoading}
+                  value={logSource === "agmsg" ? selectedTeam : ""}
+                  onChange={(event) => {
+                    const teamName = event.target.value;
+                    if (teamName) {
+                      void loadAgmsgTeam(teamName);
+                    } else {
+                      void loadSampleLog();
+                    }
+                  }}
+                >
+                  <option value="">{t("sourceSampleOption")}</option>
+                  {teams.map((team) => (
+                    <option key={team.name} value={team.name}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <p className="meta-text">
-              {formatSourceStatus({
-                entriesCount: entries.length,
-                importedFileName,
-                loading: logLoading,
-                logSource,
-                selectedTeam,
-                t,
-              })}
+              {IS_ADDON && !selectedTeam
+                ? t("addonWaiting")
+                : formatSourceStatus({
+                    entriesCount: entries.length,
+                    importedFileName,
+                    loading: logLoading,
+                    logSource,
+                    selectedTeam,
+                    t,
+                  })}
             </p>
             {logSource === "agmsg" && teams.length > 0 && (
               <p className="meta-text">
@@ -626,6 +712,7 @@ function App() {
                   .trim() || t("unknown")}
               </p>
             )}
+            {IS_ADDON && <p className="meta-text">{t("addonLiveNotice")}</p>}
             {agmsgError && <p className="error-text">{agmsgError}</p>}
           </section>
 
@@ -669,7 +756,7 @@ function App() {
             characterAssets={characterAssets}
             characterConfig={characterConfig}
             expanded={showCastingPanel}
-            isDevServer={import.meta.env.DEV}
+            isDevServer={import.meta.env.DEV && !IS_ADDON}
             slotStageDisplayNames={slotStageDisplayNames}
             t={t}
             onCharacterDeleted={removeCharacterAsset}
@@ -707,23 +794,27 @@ function App() {
                   />
                   <span>{t("characterMotion")}</span>
                 </label>
-                <label className="file-input">
-                  {t("importJson")}
-                  <input
-                    accept="application/json,.json"
-                    type="file"
-                    onChange={importJsonLog}
-                  />
-                </label>
-                <button
-                  disabled={
-                    logLoading || logSource !== "agmsg" || !selectedTeam
-                  }
-                  type="button"
-                  onClick={() => void loadAgmsgTeam(selectedTeam)}
-                >
-                  {t("reloadCurrentTeam")}
-                </button>
+                {!IS_ADDON && (
+                  <label className="file-input">
+                    {t("importJson")}
+                    <input
+                      accept="application/json,.json"
+                      type="file"
+                      onChange={importJsonLog}
+                    />
+                  </label>
+                )}
+                {!IS_ADDON && (
+                  <button
+                    disabled={
+                      logLoading || logSource !== "agmsg" || !selectedTeam
+                    }
+                    type="button"
+                    onClick={() => void loadAgmsgTeam(selectedTeam)}
+                  >
+                    {t("reloadCurrentTeam")}
+                  </button>
+                )}
               </div>
             )}
           </section>
@@ -1107,6 +1198,8 @@ async function fetchCharacterAssets(
 async function fetchCustomCharacters(
   cacheBust = false,
 ): Promise<CharacterAsset[]> {
+  if (IS_ADDON) return [];
+
   try {
     const query = cacheBust ? `?t=${Date.now()}` : "";
     const response = await fetch(

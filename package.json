@@ -8,6 +8,8 @@
     "assets:generate-sprites": "python3 scripts/generate-portrait-spritesheets.py",
     "fmt": "biome format . --write",
     "build": "tsc -b && vite build",
+    "build:addon": "tsc -b && vite build --mode addon && node scripts/agmsg-addon-copy.mjs dist-addon agmsg-office",
+    "check:addon": "node scripts/agmsg-addon-check.cjs",
     "lint": "biome check .",
     "preview": "vite preview",
     "test": "tsc -b"

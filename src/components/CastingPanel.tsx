@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { IS_ADDON } from "../lib/addon";
 import {
   CHARACTER_CONFIG_STORAGE_KEY,
   DEFAULT_CASTING,
@@ -10,6 +11,7 @@ import {
   isCastingOverride,
 } from "../lib/characters";
 import type { I18nKey } from "../lib/i18n";
+import { ASSET_BASE } from "../lib/paths";
 import type {
   CharacterAsset,
   CharacterConfig,
@@ -73,8 +75,12 @@ export function CastingPanel({
 
       {expanded && (
         <div className="casting-content">
-          {!isDevServer && (
-            <p className="notice-text">{t("castingDevOnlyNotice")}</p>
+          {IS_ADDON ? (
+            <p className="notice-text">{t("castingAddonNotice")}</p>
+          ) : (
+            !isDevServer && (
+              <p className="notice-text">{t("castingDevOnlyNotice")}</p>
+            )
           )}
 
           <div className="casting-actions">
@@ -140,13 +146,15 @@ export function CastingPanel({
                   </div>
 
                   <div className="casting-row-controls">
-                    <button
-                      disabled={!isDevServer}
-                      type="button"
-                      onClick={() => setEditingSlotId(slotId)}
-                    >
-                      {t("castingReplaceCharacter")}
-                    </button>
+                    {!IS_ADDON && (
+                      <button
+                        disabled={!isDevServer}
+                        type="button"
+                        onClick={() => setEditingSlotId(slotId)}
+                      >
+                        {t("castingReplaceCharacter")}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() =>
@@ -189,13 +197,17 @@ export function CastingPanel({
             })}
           </div>
 
-          <details className="casting-details">
-            <summary>{t("castingConfigJson")}</summary>
-            <p>
-              {t("castingStorageNotice", { key: CHARACTER_CONFIG_STORAGE_KEY })}
-            </p>
-            <pre>{JSON.stringify(characterConfig, null, 2)}</pre>
-          </details>
+          {!IS_ADDON && (
+            <details className="casting-details">
+              <summary>{t("castingConfigJson")}</summary>
+              <p>
+                {t("castingStorageNotice", {
+                  key: CHARACTER_CONFIG_STORAGE_KEY,
+                })}
+              </p>
+              <pre>{JSON.stringify(characterConfig, null, 2)}</pre>
+            </details>
+          )}
         </div>
       )}
 
@@ -244,7 +256,7 @@ export function CharacterThumb({
       <img
         alt=""
         className="character-thumb"
-        src={`/assets/characters/${character.portraitPath}`}
+        src={`${ASSET_BASE}characters/${character.portraitPath}`}
       />
     );
   }
@@ -255,7 +267,7 @@ export function CharacterThumb({
         aria-hidden="true"
         className="character-thumb character-thumb-sprite"
         style={{
-          backgroundImage: `url(/assets/characters/${character.spritesheetPath})`,
+          backgroundImage: `url(${ASSET_BASE}characters/${character.spritesheetPath})`,
         }}
       />
     );

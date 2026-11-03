@@ -43,6 +43,23 @@ The sample and JSON import work anywhere (including a production `npm run build`
 Reading your local agmsg history needs the dev server, since that part runs a small
 helper that reads your local `agmsg` data.
 
+## Use it in the agmsg desktop app
+
+agmsg Office also runs as an add-on pane in the
+[agmsg desktop app](https://github.com/fujibee/agmsg/tree/main/app) (0.6.0 or
+later), with no clone or Node.js needed.
+
+1. In the app, open **Settings → Add-ons → Install from GitHub**.
+2. Enter `shinshin86/agmsg-office`, press **Install…**, review the permission it
+   asks for, and confirm.
+3. Press the **+** at the top of the panes and choose
+   **Add-on pane → agmsg Office**. Allow it to read the team's messages.
+
+The pane shows the current team's recent messages, and new messages play on the
+stage as they arrive. The app's sandbox blocks storage and the dev server, so
+settings last only while the pane is open and character upload is not available
+there.
+
 ## Custom characters
 
 Want to cast your own original characters instead of the bundled roster? Use the
