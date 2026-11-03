@@ -6,6 +6,7 @@ import {
   getMotionPersonality,
   pickRestAction,
 } from "../lib/motionPersonality";
+import { ASSET_BASE } from "../lib/paths";
 import type { CharacterState, StageCharacter } from "../types";
 
 type PetAction =
@@ -45,7 +46,6 @@ interface MotionState {
   speedJitter: number;
 }
 
-const ASSET_BASE = "/assets/";
 const CELL_WIDTH = 192;
 const CELL_HEIGHT = 208;
 const ATLAS_COLUMNS = 8;

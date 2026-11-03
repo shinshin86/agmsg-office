@@ -10,6 +10,7 @@ import {
   isCastingOverride,
 } from "../lib/characters";
 import type { I18nKey } from "../lib/i18n";
+import { ASSET_BASE } from "../lib/paths";
 import type {
   CharacterAsset,
   CharacterConfig,
@@ -244,7 +245,7 @@ export function CharacterThumb({
       <img
         alt=""
         className="character-thumb"
-        src={`/assets/characters/${character.portraitPath}`}
+        src={`${ASSET_BASE}characters/${character.portraitPath}`}
       />
     );
   }
@@ -255,7 +256,7 @@ export function CharacterThumb({
         aria-hidden="true"
         className="character-thumb character-thumb-sprite"
         style={{
-          backgroundImage: `url(/assets/characters/${character.spritesheetPath})`,
+          backgroundImage: `url(${ASSET_BASE}characters/${character.spritesheetPath})`,
         }}
       />
     );

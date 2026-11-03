@@ -90,6 +90,7 @@ export const STRINGS = {
     theater: "Theater",
     theaterExit: "Exit theater",
     topbarSubtitle: "Replay agent messages as a character stage.",
+    addonLiveNotice: "New messages play automatically as they arrive.",
     unknown: "unknown",
     uploadNewCharacter: "Upload new",
     portraitPreview: "Portrait preview",
@@ -178,6 +179,7 @@ export const STRINGS = {
     stageLabel: "エージェントステージ",
     theater: "シアター",
     theaterExit: "シアター解除",
+    addonLiveNotice: "新しいメッセージは届くと自動で再生されます。",
     topbarSubtitle:
       "エージェントのメッセージをキャラクターステージとして再生します。",
     unknown: "不明",

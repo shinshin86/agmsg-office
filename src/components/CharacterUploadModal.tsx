@@ -8,6 +8,7 @@ import {
 } from "../lib/characterUpload";
 import { getCharacterDisplayName } from "../lib/characters";
 import type { I18nKey } from "../lib/i18n";
+import { ASSET_BASE } from "../lib/paths";
 import type {
   CharacterAsset,
   CharacterConfig,
@@ -302,7 +303,7 @@ export function CharacterUploadModal({
 async function waitForServableAsset(path: string | undefined): Promise<void> {
   if (!path) return;
 
-  const url = `/assets/characters/${path}`;
+  const url = `${ASSET_BASE}characters/${path}`;
   const deadline = Date.now() + ASSET_READY_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
@@ -334,7 +335,7 @@ function CharacterThumb({ character }: { character: CharacterAsset }) {
       <img
         alt=""
         className="character-thumb"
-        src={`/assets/characters/${character.portraitPath}`}
+        src={`${ASSET_BASE}characters/${character.portraitPath}`}
       />
     );
   }
@@ -345,7 +346,7 @@ function CharacterThumb({ character }: { character: CharacterAsset }) {
       className="character-thumb character-thumb-sprite"
       style={{
         backgroundImage: character.spritesheetPath
-          ? `url(/assets/characters/${character.spritesheetPath})`
+          ? `url(${ASSET_BASE}characters/${character.spritesheetPath})`
           : undefined,
       }}
     />

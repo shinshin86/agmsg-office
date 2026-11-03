@@ -80,7 +80,11 @@ function compareAgmsgEntries(left: AgmsgEntry, right: AgmsgEntry): number {
   if (Number.isFinite(leftId) && Number.isFinite(rightId)) {
     return leftId - rightId;
   }
-  return left.id.localeCompare(right.id, undefined, { numeric: true });
+  // Synced teams may use UUID ids, which carry no order.
+  return (
+    left.createdAt.localeCompare(right.createdAt) ||
+    left.id.localeCompare(right.id, undefined, { numeric: true })
+  );
 }
 
 function toIsoString(value: string): string {
