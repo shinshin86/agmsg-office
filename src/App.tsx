@@ -506,11 +506,27 @@ function App() {
 
   useEffect(() => {
     if (!activeEntryId) return;
-    activeLogEntryRef.current?.scrollIntoView({
-      block: "nearest",
-      behavior: "smooth",
-    });
+    // Scroll only the log list, so the stage stays in view when it shares a
+    // scrolling page with the log.
+    const entry = activeLogEntryRef.current;
+    const list = entry?.closest(".log-list");
+    if (!entry || !list) return;
+    const entryRect = entry.getBoundingClientRect();
+    const listRect = list.getBoundingClientRect();
+    const headingHeight = list.querySelector("h2")?.offsetHeight ?? 0;
+    const hiddenAbove = listRect.top + headingHeight - entryRect.top;
+    const hiddenBelow = entryRect.bottom - listRect.bottom;
+    if (hiddenAbove > 0) {
+      list.scrollBy({ top: -hiddenAbove, behavior: "smooth" });
+    } else if (hiddenBelow > 0) {
+      list.scrollBy({ top: hiddenBelow, behavior: "smooth" });
+    }
   }, [activeEntryId]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: theaterMode is the trigger; the layout height changes when it flips.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [theaterMode]);
 
   const updateCharacterConfig = useCallback(
     (updater: (config: CharacterConfig) => CharacterConfig) => {

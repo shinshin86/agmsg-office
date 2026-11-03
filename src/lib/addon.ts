@@ -23,6 +23,10 @@ export function connectAddon(nextHandlers: AddonHandlers): void {
   if (connected) return;
   connected = true;
   connect({
+    // The app hands over the port only after the frame's load event, which can
+    // take more than the kit's one-second sample timeout because of our assets.
+    // Falling back to sample data would discard the real port.
+    sample: import.meta.env.DEV,
     onInit: (init) => handlers?.onInit(init),
     onMessage: (message) => handlers?.onMessage(message),
   });

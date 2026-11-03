@@ -91,6 +91,7 @@ export const STRINGS = {
     theaterExit: "Exit theater",
     topbarSubtitle: "Replay agent messages as a character stage.",
     addonLiveNotice: "New messages play automatically as they arrive.",
+    castingAddonNotice: "Casting changes last only while this pane is open.",
     unknown: "unknown",
     uploadNewCharacter: "Upload new",
     portraitPreview: "Portrait preview",
@@ -180,6 +181,7 @@ export const STRINGS = {
     theater: "シアター",
     theaterExit: "シアター解除",
     addonLiveNotice: "新しいメッセージは届くと自動で再生されます。",
+    castingAddonNotice: "配役の変更は、このペインを開いている間だけ有効です。",
     topbarSubtitle:
       "エージェントのメッセージをキャラクターステージとして再生します。",
     unknown: "不明",
